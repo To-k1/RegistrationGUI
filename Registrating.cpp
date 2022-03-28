@@ -263,6 +263,7 @@ bool Worker::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String FnFi, 
 			if (failed)
 				failedImg << string(FnSrc.c_str()) << std::endl;
 			std::cout << "该图失败" << std::endl;
+            failedImg.close();
 			return false;
 		}
 
@@ -303,6 +304,7 @@ bool Worker::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String FnFi, 
 				if (failed)
 					failedImg << string(FnSrc.c_str()) << std::endl;
 				std::cout << "该图失败" << std::endl;
+                failedImg.close();
 				return false;
 			}
 		}
@@ -439,8 +441,8 @@ void Worker::Registrating(String& srcPattern, String& binPattern, String& dstPat
 		renameRoot(srcPattern);
 		glob(srcPattern, srcNames, true);
 	}
-	//仅自动配准时用于清空失败的图片列表
-	if (useSemiAuto != 'y') {
+    //仅自动配准且从头开始时用于清空失败的图片列表
+    if (useSemiAuto != 'y' || startPos != 0) {
 		ofstream failedImg("failedImg.txt");
 		failedImg.close();
 	}
@@ -454,6 +456,20 @@ void Worker::Registrating(String& srcPattern, String& binPattern, String& dstPat
             emit set_pause();
             return;
         }
+
+        //任务进度
+        string progress(std::to_string(i) + "/" + std::to_string(srcNames.size()));
+        //win->set_labelProgress_text(QString::fromStdString(progress));
+        emit set_labelProgress_text(QString::fromStdString(progress));
+        //显示百分比进度
+        //win->set_progressBar_val(int(100*double(i+1)/srcNames.size()));
+        emit set_progressBar_val(int(100*double(i+1)/srcNames.size()));
+        //输出进度
+        //std::cout << srcNames[i] << std::endl; std::cout << binName << std::endl; std::cout << dstName << std::endl;
+        //win->set_labelProcessingName_text(QString::fromStdString(srcNames[i]));
+        emit set_labelProcessingName_text(QString::fromStdString(srcNames[i]));
+
+
 
 		bool flagM = true;
 		int startChar = srcPattern.size() + 1;//除去floderPattern外的第一个字符下标
@@ -485,18 +501,6 @@ void Worker::Registrating(String& srcPattern, String& binPattern, String& dstPat
 
 		//dstName = String("F:\\RootImg\\") + fn + ".png";
 		dstName = dstPattern + "\\" + fn + ".png";
-
-        //任务进度
-        string progress(std::to_string(i) + "/" + std::to_string(srcNames.size()));
-        //win->set_labelProgress_text(QString::fromStdString(progress));
-        emit set_labelProgress_text(QString::fromStdString(progress));
-        //显示百分比进度
-        //win->set_progressBar_val(int(100*double(i+1)/srcNames.size()));
-        emit set_progressBar_val(int(100*double(i+1)/srcNames.size()));
-        //输出进度
-        //std::cout << srcNames[i] << std::endl; std::cout << binName << std::endl; std::cout << dstName << std::endl;
-        //win->set_labelProcessingName_text(QString::fromStdString(srcNames[i]));
-        emit set_labelProcessingName_text(QString::fromStdString(srcNames[i]));
 
 
 

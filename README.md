@@ -1,1 +1,11 @@
 # 具有GUI的全自动图像配准软件
+## 必须文件
+- *.h
+- *.cpp
+- refImg.png
+- failedImg.txt
+## 原图和二值图放在目录里的相同位置并名称一致
+- 如：
+- 原图为：**srcImg**/aaa/bbb/ccc/1.jpg
+- 二值图为：**binImg**/aaa/bbb/ccc/1.png
+- **加粗**的为前缀，后面的要一样(扩展名可以是jpg或png)

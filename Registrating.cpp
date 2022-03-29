@@ -463,7 +463,7 @@ void Worker::Registrating(String& srcPattern, String& binPattern, String& dstPat
         emit set_labelProgress_text(QString::fromStdString(progress));
         //显示百分比进度
         //win->set_progressBar_val(int(100*double(i+1)/srcNames.size()));
-        emit set_progressBar_val(int(100*double(i+1)/srcNames.size()));
+        emit set_progressBar_val(int(100*double(i)/srcNames.size()));
         //输出进度
         //std::cout << srcNames[i] << std::endl; std::cout << binName << std::endl; std::cout << dstName << std::endl;
         //win->set_labelProcessingName_text(QString::fromStdString(srcNames[i]));
@@ -522,7 +522,13 @@ void Worker::Registrating(String& srcPattern, String& binPattern, String& dstPat
 	//仅在全自动程序成功运行结束时把这次的失败列表备份
 	if (useSemiAuto != 'y')
 		CopyFile(L"failedImg.txt", L"failedImg.txt.bak", FALSE);
-    // 发送结束信号
+    // 先更新进度到完成再发送结束信号
+    string progress(std::to_string(srcNames.size()) + "/" + std::to_string(srcNames.size()));
+    //win->set_labelProgress_text(QString::fromStdString(progress));
+    emit set_labelProgress_text(QString::fromStdString(progress));
+    //显示百分比进度
+    //win->set_progressBar_val(int(100*double(i+1)/srcNames.size()));
+    emit set_progressBar_val(100);
     emit resultReady();
 
 }

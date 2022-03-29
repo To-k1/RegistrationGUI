@@ -264,6 +264,8 @@ bool Worker::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String FnFi, 
 				failedImg << string(FnSrc.c_str()) << std::endl;
 			std::cout << "该图失败" << std::endl;
             failedImg.close();
+            //删除失败的结果图，方便下一步处理
+            remove(FnFi.c_str());
 			return false;
 		}
 
@@ -305,6 +307,8 @@ bool Worker::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String FnFi, 
 					failedImg << string(FnSrc.c_str()) << std::endl;
 				std::cout << "该图失败" << std::endl;
                 failedImg.close();
+                //删除失败的结果图，方便下一步处理
+                remove(FnFi.c_str());
 				return false;
 			}
 		}

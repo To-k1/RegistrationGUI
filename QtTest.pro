@@ -41,6 +41,5 @@ else:win32:CONFIG(debug, debug|release): LIBS += D:/OpenCV3.4.16/opencv/build/x6
 
 UI_DIR=./
 
-RESOURCES += \
-    res.qrc
+RESOURCES +=
 

@@ -24,60 +24,60 @@ using std::string;
 using std::vector;
 namespace fs = std::filesystem;
 
-class MainWindow;
+
+extern vector<vector<Point>> pts, rectPts;//存放交点
+extern Mat ref_win, src_win;
 
 
 
 
-class Worker:public QObject
+class Registrator : public QObject
 {
-    Q_OBJECT
+	Q_OBJECT
 public:
-    Worker(QObject* parent = nullptr):is_paused(false){}
-    inline bool isPaused(){return is_paused;}
-    inline void worker_pause(){this->is_paused = true;}
-    inline void worker_resume(){this->is_paused = false;}
-public slots:
-    // doWork定义了线程要执行的操作
-    void Registrating(String& srcPattern, String& binPattern, String& dstPattern, char useSemiAuto, char useFailedImg, MainWindow* win, int startPos = 0);
-    //暂停和恢复
-// 线程完成工作时发送的信号
+	//可指定一个线程用于运行
+	Registrator() :is_paused(false) {}
+	inline bool isPaused() { return is_paused; }
+	inline void worker_pause() { this->is_paused = true; }
+	inline void worker_resume() { this->is_paused = false; }
+	//参数分别为源文件父目录，根箱二值图父目录，目标文件存储目录，是否使用半自动[y/n]，是否使用失败文件列表[y/n]，传入的主窗口指针，从第几个文件开始(默认为0，用于暂停)
+	//最后一个为回调函数用于发送进度信息，参数分别为目前处理的文件名，处理到第几个文件，总共处理多少文件，T为调用该函数的窗口类型
+	void Registrating(String& srcPattern, String& binPattern, String& dstPattern, char useSemiAuto, char useFailedImg, QMainWindow* win, int startPos = 0);
 signals:
-    void resultReady();
-    void set_labelProcessingName_text(const QString& text);
-    void set_labelProgress_text(const QString& text);
-    void set_progressBar_val(int val);
-    void set_pause();
+	void handleResults();
+	void handlePause();
+	void sendProcess(QString processingName, int processingNum, int allNum);
+
 private:
-    static void mkdirAndImwrite(const String& filename, InputArray& img);
+	static void mkdirAndImwrite(const String& filename, InputArray& img);
 
-    //PointSort
-    static bool SetSortRuleX(const Point p1, const Point p2);
-    //对x方向上的点位进行排序
-    static bool SetSortRuleY(const Point p1, const Point p2);
-    //用于从上到下从左到右排序
-    static int PointSortL2R(vector<Point>& pts);
+	//PointSort
+	static bool SetSortRuleX(const Point p1, const Point p2);
+	//对x方向上的点位进行排序
+	static bool SetSortRuleY(const Point p1, const Point p2);
+	//用于从上到下从左到右排序
+	static int PointSortL2R(vector<Point>& pts);
 
-    //对点进行顺时针排序，保证能正确绘制矩形
-    static void ClockwiseSortPoints(vector<Point>& pts);
-    static void ClockwiseSortPoints(Point2f pts[], int ptsSize);
-    static double KAngle(const Point& a, const Point& center);
+	//对点进行顺时针排序，保证能正确绘制矩形
+	static void ClockwiseSortPoints(vector<Point>& pts);
+	static void ClockwiseSortPoints(Point2f pts[], int ptsSize);
+	static double KAngle(const Point& a, const Point& center);
 
-    //intoPoly
-    static int RemoveSmall(Mat& src, Mat& dst);
-    static void SolvEqu(double a, double b, double c, double d, double e, double f, double& x, double& y);
-    //默认void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 10, double theta_h = CV_PI / 240, double th_h = 1400);
-    static void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 12, double theta_h = CV_PI / 240, double th_h = 1000);
-    static void intoPoly(Mat& dstImage, vector<vector<Point>>& pts);
+	//intoPoly
+	static int RemoveSmall(Mat& src, Mat& dst);
+	static void SolvEqu(double a, double b, double c, double d, double e, double f, double& x, double& y);
+	//默认void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 10, double theta_h = CV_PI / 240, double th_h = 1400);
+	static void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 12, double theta_h = CV_PI / 240, double th_h = 1000);
+	static void intoPoly(Mat& dstImage, vector<vector<Point>>& pts);
 
-    //Registrating
-    //默认bool Registrating1Pic(Mat& M, String FnSrc = "005.jpg", String fnImg1 = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "0.png", String FnMid2 = "01.png", String fnRefImg = "refImg.png");
-    static bool Registrating1Pic(Mat& M, String FnSrc = "005.jpg", String fnImg1 = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "0.png", String FnMid2 = "01.png", String fnRefImg = "refImg.png");
-    static void renameRoot(String srcPattern);
-    static void on_mouse(int event, int x, int y, int flags, void* ustc);
-    static bool Registrating1PicSemi(Mat& M, String FnSrc = "005.jpg", String fnImg1 = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "0.png", String FnMid2 = "01.png", String fnRefImg = "refImg.png");
+	//Registrating
+	//默认bool Registrating1Pic(Mat& M, String FnSrc = "005.jpg", String fnImg1 = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "0.png", String FnMid2 = "01.png", String fnRefImg = "refImg.png");
+	static bool Registrating1Pic(Mat& M, String FnSrc = "005.jpg", String fnImg1 = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "0.png", String FnMid2 = "01.png", String fnRefImg = "refImg.png");
+	static void renameRoot(String srcPattern);
+	static void on_mouse(int event, int x, int y, int flags, void* ustc);
+	static bool Registrating1PicSemi(Mat& M, String FnSrc = "005.jpg", String fnImg1 = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "0.png", String FnMid2 = "01.png", String fnRefImg = "refImg.png");
 
-    bool is_paused;
+	bool is_paused;
 };
 
 

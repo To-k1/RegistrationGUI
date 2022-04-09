@@ -22,48 +22,48 @@ class MainWindow;
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
-    QThread workerThread;
+	Q_OBJECT
+		QThread workerThread;
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
-    inline char getSemi(){return semiauto;}
-    inline char getFailed(){return failed_list;}
-
+	MainWindow(QWidget* parent = nullptr);
+	~MainWindow();
+	inline char getSemi() { return semiauto; }
+	inline char getFailed() { return failed_list; }
 
 signals:
-    void operate(cv::String& srcPattern, cv::String& binPattern, cv::String& dstPattern, char useSemiAuto, char useFailedImg, MainWindow* win, int startPos = 0);
+    void operate(cv::String& srcPattern, cv::String& binPattern, cv::String& dstPattern, char useSemiAuto, char useFailedImg, QMainWindow* win, int startPos = 0);
 
 public slots:
-    void handleResults();
-    void handlePause();
-    void set_labelProcessingName_text(const QString& text);
-    void set_labelProgress_text(const QString& text);
-    void set_progressBar_val(int val);
+	void handleResults();
+	void handlePause();
+	//void set_labelProcessingName_text(const QString& text);
+	//void set_labelProgress_text(const QString& text);
+	//void set_progressBar_val(int val);
+	void sendProcess(QString processingName, int processingNum, int allNum);
 
 private slots:
-    void on_pushButtonSrc_clicked();
+	void on_pushButtonSrc_clicked();
 
-    void on_pushButtonBin_clicked();
+	void on_pushButtonBin_clicked();
 
-    void on_pushButtonDst_clicked();
+	void on_pushButtonDst_clicked();
 
-    void on_checkBoxSemiAuto_stateChanged(int arg1);
+	void on_checkBoxSemiAuto_stateChanged(int arg1);
 
-    void on_checkBoxFailedList_stateChanged(int arg1);
+	void on_checkBoxFailedList_stateChanged(int arg1);
 
-    void on_pushButtonRun_clicked();
+	void on_pushButtonRun_clicked();
 
-    void on_pushButtonPause_clicked();
+	void on_pushButtonPause_clicked();
 
-    void on_pushButtonResume_clicked();
+	void on_pushButtonResume_clicked();
 
 private:
-    Ui::MainWindow *ui;
-    //分别决定是否使用手动配准和失败文件列表，默认为'n'
-    char semiauto;
-    char failed_list;
-    Worker* worker;
+	Ui::MainWindow* ui;
+	//分别决定是否使用手动配准和失败文件列表，默认为'n'
+	char semiauto;
+	char failed_list;
+	Registrator* worker;
 };
 
 #endif // MAINWINDOW_H

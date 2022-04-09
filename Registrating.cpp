@@ -445,7 +445,7 @@ bool Registrator::Registrating1PicSemi(Mat& M, String FnSrc, String fnImg1, Stri
 
 //完成整个配准过程
 
-void Registrator::Registrating(String& srcPattern, String& binPattern, String& dstPattern, char useSemiAuto, char useFailedImg, QWidget* win, int startPos) {
+void Registrator::Registrating(String& srcPattern, String& binPattern, String& dstPattern, char useSemiAuto, char useFailedImg, QObject* win, int startPos) {
 	//qDebug() << "12311111111111111111111111111111111111111111111";
 	vector<String> srcNames;//保存图名
 	//String srcPattern = "E:\\root\\";

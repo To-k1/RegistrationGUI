@@ -43,7 +43,7 @@ public:
 public slots:
 	//参数分别为源文件父目录，根箱二值图父目录，目标文件存储目录，是否使用半自动[y/n]，是否使用失败文件列表[y/n]，传入的主窗口指针，从第几个文件开始(默认为0，用于暂停)
 	//最后一个为回调函数用于发送进度信息，参数分别为目前处理的文件名，处理到第几个文件，总共处理多少文件，T为调用该函数的窗口类型
-	void Registrating(String& srcPattern, String& binPattern, String& dstPattern, char useSemiAuto, char useFailedImg, QWidget* win = nullptr, int startPos = 0);
+	void Registrating(String& srcPattern, String& binPattern, String& dstPattern, char useSemiAuto, char useFailedImg, QObject* win = nullptr, int startPos = 0);
 signals:
 	void handleResults();
 	void handlePause();

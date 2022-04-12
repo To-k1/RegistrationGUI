@@ -10,8 +10,6 @@
 #include <opencv2\opencv.hpp>
 #include <highgui.hpp>
 #include <imgproc.hpp>
-#include <QMainWindow>
-#include <QFileDialog>
 #include <QString>
 #include <QObject>
 #include <QThread>
@@ -36,18 +34,20 @@ class Registrator : public QObject
 	Q_OBJECT
 public:
 	//可指定一个线程用于运行
-	Registrator() :is_paused(false) {}
+	Registrator() = default;
+	Registrator(const Registrator& src) : is_paused(src.is_paused) {}
+	~Registrator() {}
 	inline bool isPaused() { return is_paused; }
 	inline void worker_pause() { this->is_paused = true; }
 	inline void worker_resume() { this->is_paused = false; }
 public slots:
-	//参数分别为源文件父目录，根箱二值图父目录，目标文件存储目录，是否使用半自动[y/n]，是否使用失败文件列表[y/n]，传入的主窗口指针，从第几个文件开始(默认为0，用于暂停)
+	//参数分别为源文件父目录，根箱二值图父目录，目标文件存储目录，是否使用半自动[y/n]，是否使用失败文件列表[y/n]，从第几个文件开始(默认为0，用于暂停)
 	//最后一个为回调函数用于发送进度信息，参数分别为目前处理的文件名，处理到第几个文件，总共处理多少文件，T为调用该函数的窗口类型
-	void Registrating(String& srcPattern, String& binPattern, String& dstPattern, char useSemiAuto, char useFailedImg, QObject* win = nullptr, int startPos = 0);
+	void registrating(const string& srcPattern, const string& binPattern, const string& dstPattern, const char useSemiAuto, const char useFailedImg, const int startPos = 0);
 signals:
 	void handleResults();
 	void handlePause();
-	void sendProcess(QString processingName, int processingNum, int allNum);
+	void sendProcess(const QString processingName, const int processingNum, const int allNum);
 
 private:
 	static void mkdirAndImwrite(const String& filename, InputArray& img);
@@ -67,8 +67,10 @@ private:
 	//intoPoly
 	static int RemoveSmall(Mat& src, Mat& dst);
 	static void SolvEqu(double a, double b, double c, double d, double e, double f, double& x, double& y);
-	//默认void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 10, double theta_h = CV_PI / 240, double th_h = 1400);
-	static void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 12, double theta_h = CV_PI / 240, double th_h = 1000);
+	//默认static void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 10, double theta_h = CV_PI / 240, double th_h = 1400);
+	//static void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 12, double theta_h = CV_PI / 240, double th_h = 1000);
+
+	static void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 1, double theta_h = CV_PI / 360, double th_h = 450, double srn = 0, double stn = 0);
 	static void intoPoly(Mat& dstImage, vector<vector<Point>>& pts);
 
 	//Registrating

@@ -184,7 +184,7 @@ void Registrator::SolvEqu(double a, double b, double c, double d, double e, doub
 
 //获得直线交点,第4,5,6个参数是HoughLines的rho精度，theta精度和长度阈值
 
-void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h, double theta_h, double th_h)
+void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h, double theta_h, double th_h, double srn, double stn)
 {
 	//【1】载入原始图和Mat变量定义   
 	//Mat srcImage = imread("remove.png");  //工程目录下应该有一张名为remove.png的素材图
@@ -197,7 +197,7 @@ void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& 
 
 	//【3】进行霍夫线变换
 	vector<Vec2f> lines;//定义一个矢量结构lines用于存放得到的线段矢量集合
-	HoughLines(midImage, lines, rho_h, theta_h, th_h, 0, 0);
+	HoughLines(midImage, lines, rho_h, theta_h, th_h, srn, stn);
 
 	//【4】依次在图中绘制出每条线段,并且两两求交点
 	for (size_t i = 0; i < lines.size(); i++)
@@ -218,7 +218,7 @@ void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& 
 			double rho2 = lines[j][0], theta2 = lines[j][1];
 			double c = cos(theta2), d = sin(theta2), x, y;
 			SolvEqu(a, b, -rho, c, d, -rho2, x, y);
-			if ((0 <= x && x <= 4096 && 0 <= y && y <= 3000) && !((x > 1000 && x < 3000) || (y > 1050 && y < 1950)))
+			if ((0 <= x && x <= srcImage.cols && 0 <= y && y <= srcImage.rows) && !((x > (srcImage.cols / 4) && x < (srcImage.cols / 6 * 5)) || (y > (srcImage.rows / 3) && y < (srcImage.rows / 3 * 2))))
 				pts[0].push_back(Point(x, y));
 		}
 	}
@@ -271,7 +271,7 @@ bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String F
 		RemoveSmall(Img1, midImg);
 		try {
 			//获得多边形顶点1（重复3次减少误差默认failed ? CntPoint(midImg, Img1, pts, 15, CV_PI / 240, 800) : CntPoint(midImg, Img1, pts);
-			failed ? CntPoint(midImg, Img1, pts, 15, CV_PI / 240, 700) : CntPoint(midImg, Img1, pts);
+			failed ? CntPoint(midImg, Img1, pts, 12, CV_PI / 180, 1000) : CntPoint(midImg, Img1, pts);
 			std::cout << pts[0] << std::endl;
 			//由顶点填充多边形1
 			intoPoly(Img1, pts);
@@ -311,7 +311,7 @@ bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String F
 		//删除多余顶点(仅仅将不多余的放入2f)
 		for (int i = 1, j = 1; i < pts[0].size(); ++i) {
 			//不为多余顶点
-			if (abs(pts[0][i - 1].x - pts[0][i].x) > 1000 || abs(pts[0][i - 1].y - pts[0][i].y) > 800)
+			if (abs(pts[0][i - 1].x - pts[0][i].x) > (src.cols / 4) || abs(pts[0][i - 1].y - pts[0][i].y) > (src.rows / 4))
 				pts2F[j++] = pts[0][i];
 		}
 		pts2F[0] = pts[0][0];
@@ -338,6 +338,8 @@ bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String F
 	}
 	Mat maskedDst;
 	dst.copyTo(maskedDst, refImg);//抠图
+	//测试用，如果失败过在图片上标记
+	if (failed) putText(maskedDst, "2222", Point(1600, 900), FONT_HERSHEY_TRIPLEX, 10, Scalar(0, 0, 255));
 	mkdirAndImwrite(FnFi, maskedDst);//最终结果
 	failedImg.close();
 
@@ -417,7 +419,7 @@ bool Registrator::Registrating1PicSemi(Mat& M, String FnSrc, String fnImg1, Stri
 		//删除多余顶点(仅仅将不多余的放入2f)
 		for (int i = 1, j = 1; i < pts[0].size(); ++i) {
 			//不为多余顶点
-			if (abs(pts[0][i - 1].x - pts[0][i].x) > 1000 || abs(pts[0][i - 1].y - pts[0][i].y) > 800)
+			if (abs(pts[0][i - 1].x - pts[0][i].x) > (src.cols / 4) || abs(pts[0][i - 1].y - pts[0][i].y) > (src.rows / 4))
 				pts2F[j++] = pts[0][i];
 		}
 		pts2F[0] = pts[0][0];
@@ -445,7 +447,7 @@ bool Registrator::Registrating1PicSemi(Mat& M, String FnSrc, String fnImg1, Stri
 
 //完成整个配准过程
 
-void Registrator::Registrating(String& srcPattern, String& binPattern, String& dstPattern, char useSemiAuto, char useFailedImg, QObject* win, int startPos) {
+void Registrator::registrating(const string& srcPattern, const string& binPattern, const string& dstPattern, const char useSemiAuto, const char useFailedImg, const int startPos) {
 	//qDebug() << "12311111111111111111111111111111111111111111111";
 	vector<String> srcNames;//保存图名
 	//String srcPattern = "E:\\root\\";

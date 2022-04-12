@@ -31,7 +31,8 @@ public:
 	inline char getFailed() { return failed_list; }
 
 signals:
-    void operate(cv::String& srcPattern, cv::String& binPattern, cv::String& dstPattern, char useSemiAuto, char useFailedImg, QMainWindow* win, int startPos = 0);
+	void operate(const string& srcPattern, const string& binPattern, const string& dstPattern, const char useSemiAuto, const char useFailedImg, const int startPos = 0);
+	//void operate(cv::String& srcPattern, cv::String& binPattern, cv::String& dstPattern, char useSemiAuto, char useFailedImg, int startPos = 0);
 
 public slots:
 	void handleResults();
@@ -39,7 +40,7 @@ public slots:
 	//void set_labelProcessingName_text(const QString& text);
 	//void set_labelProgress_text(const QString& text);
 	//void set_progressBar_val(int val);
-	void sendProcess(QString processingName, int processingNum, int allNum);
+	void sendProcess(const QString processingName, const int processingNum, const int allNum);
 
 private slots:
 	void on_pushButtonSrc_clicked();

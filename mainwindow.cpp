@@ -50,9 +50,9 @@ void MainWindow::on_checkBoxFailedList_stateChanged(int arg1)
 
 void MainWindow::on_pushButtonRun_clicked()
 {
-	String filePattern(ui->lineEditSrc->text().toStdString());
-	String binImg(ui->lineEditBin->text().toStdString());
-	String dstImg(ui->lineEditDst->text().toStdString());
+	string filePattern(ui->lineEditSrc->text().toStdString());
+	string binImg(ui->lineEditBin->text().toStdString());
+	string dstImg(ui->lineEditDst->text().toStdString());
 	//将Registrator初始化到线程workerThread上
 	worker = new Registrator();
 	worker->moveToThread(&workerThread);
@@ -65,7 +65,7 @@ void MainWindow::on_pushButtonRun_clicked()
 	//用于暂停和恢复
 	connect(worker, &Registrator::handlePause, this, &MainWindow::handlePause);
 	//operate信号发射后启动线程工作
-	connect(this, &MainWindow::operate, worker, &Registrator::Registrating);
+	connect(this, &MainWindow::operate, worker, &Registrator::registrating);
 	//线程结束后发送信号，对结果进行处理
 	connect(worker, &Registrator::handleResults, this, &MainWindow::handleResults);
 	//按钮变灰和激活
@@ -79,7 +79,7 @@ void MainWindow::on_pushButtonRun_clicked()
 	//启动线程
 	workerThread.start();
 	//发射进程运行信号
-	emit operate(filePattern, binImg, dstImg, this->getSemi(), this->getFailed(), this);
+	emit operate(filePattern, binImg, dstImg, this->getSemi(), this->getFailed());
 }
 
 void MainWindow::on_pushButtonPause_clicked()
@@ -93,9 +93,9 @@ void MainWindow::on_pushButtonResume_clicked()
 {
 	ui->pushButtonResume->setEnabled(false);
 
-	String filePattern(ui->lineEditSrc->text().toStdString());
-	String binImg(ui->lineEditBin->text().toStdString());
-	String dstImg(ui->lineEditDst->text().toStdString());
+	string filePattern(ui->lineEditSrc->text().toStdString());
+	string binImg(ui->lineEditBin->text().toStdString());
+	string dstImg(ui->lineEditDst->text().toStdString());
 	string tmp(ui->labelProgress->text().toStdString());
 	int i = 0;
 	if (!tmp.empty()) {
@@ -106,7 +106,7 @@ void MainWindow::on_pushButtonResume_clicked()
 	//重新启动线程
 	workerThread.start();
 	//发射进程运行信号,从上次终止的点开始,最后一个参数就是上次运行到的断点
-	emit operate(filePattern, binImg, dstImg, this->getSemi(), this->getFailed(), this, std::stoi(string(tmp, 0, i)));
+	emit operate(filePattern, binImg, dstImg, this->getSemi(), this->getFailed(), std::stoi(string(tmp, 0, i)));
 	ui->pushButtonPause->setEnabled(true);
 }
 
@@ -138,7 +138,7 @@ void MainWindow::handlePause() {
 	ui->labelProcessingName->setText(QString::fromStdString("已暂停"));
 }
 
-void MainWindow::sendProcess(QString processingName, int processingNum, int allNum) {
+void MainWindow::sendProcess(const QString processingName, const int processingNum, const int allNum) {
 	//任务进度
 	string progress(std::to_string(processingNum) + "/" + std::to_string(allNum));
 	ui->labelProgress->setText(QString::fromStdString(progress));

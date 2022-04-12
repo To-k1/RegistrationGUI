@@ -160,8 +160,11 @@ int Registrator::RemoveSmall(Mat& src, Mat& dst) {
 	// 提取连通区域，并剔除小面积联通区域
 	vector<vector<Point>> contours;
 	findContours(dst, contours, RETR_LIST, CHAIN_APPROX_NONE);
+	//图片总面积(像素)
+	int areaSize = src.cols * src.rows;
+	//小于图片四分之一的视为小区域
 	contours.erase(remove_if(contours.begin(), contours.end(),
-		[](const vector<Point>& c) {return contourArea(c) < 3000000; }), contours.end());
+		[areaSize](const vector<Point>& c) {return contourArea(c) < areaSize / 4; }), contours.end());
 
 	// 显示图像并保存
 	dst.setTo(0);
@@ -271,7 +274,7 @@ bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String F
 		RemoveSmall(Img1, midImg);
 		try {
 			//获得多边形顶点1（重复3次减少误差默认failed ? CntPoint(midImg, Img1, pts, 15, CV_PI / 240, 800) : CntPoint(midImg, Img1, pts);
-			failed ? CntPoint(midImg, Img1, pts, 12, CV_PI / 180, 1000) : CntPoint(midImg, Img1, pts);
+			failed ? CntPoint(midImg, Img1, pts, 12, CV_PI / 180, src.cols * 1000 / 4096) : CntPoint(midImg, Img1, pts, 1, CV_PI / 360, src.cols * 450 / 4096);
 			std::cout << pts[0] << std::endl;
 			//由顶点填充多边形1
 			intoPoly(Img1, pts);

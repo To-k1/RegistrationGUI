@@ -64,6 +64,10 @@ private:
 	static void ClockwiseSortPoints(Point2f pts[], int ptsSize);
 	static double KAngle(const Point& a, const Point& center);
 
+	//输入一个数组，返回他是否有4个不同顶点,后两个参数分别是两个点被判断为至少需要有的x，y轴距离
+	static bool has4Points(vector<Point>& pts, int th_x, int th_y);
+	static bool has4Points(Point2f pts[], int ptsSize, int th_x, int th_y);
+
 	//intoPoly
 	static int RemoveSmall(Mat& src, Mat& dst);
 	static void SolvEqu(double a, double b, double c, double d, double e, double f, double& x, double& y);
@@ -75,10 +79,10 @@ private:
 
 	//Registrating
 	//默认bool Registrating1Pic(Mat& M, String FnSrc = "005.jpg", String fnImg1 = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "0.png", String FnMid2 = "01.png", String fnRefImg = "refImg.png");
-	static bool Registrating1Pic(Mat& M, String FnSrc = "005.jpg", String fnImg1 = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "0.png", String FnMid2 = "01.png", String fnRefImg = "refImg.png");
+	static bool Registrating1Pic(Mat& M, String FnSrc = "005.jpg", String fnBinImg = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "srcLines.png", String FnMid2 = "refLines.png", String fnRefImg = "refImg.png");
 	static void renameRoot(String srcPattern);
 	static void on_mouse(int event, int x, int y, int flags, void* ustc);
-	static bool Registrating1PicSemi(Mat& M, String FnSrc = "005.jpg", String fnImg1 = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "0.png", String FnMid2 = "01.png", String fnRefImg = "refImg.png");
+	static bool Registrating1PicSemi(Mat& M, String FnSrc = "005.jpg", String fnBinImg = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "srcLines.png", String FnMid2 = "refLines.png", String fnRefImg = "refImg.png");
 
 	bool is_paused;
 };

@@ -145,6 +145,34 @@ void Registrator::ClockwiseSortPoints(Point2f pts[], int ptsSize)
 }
 
 
+//输入一个数组，返回他是否有4个不同顶点
+bool Registrator::has4Points(vector<Point>& pts, int th_x, int th_y) {
+	//用来表示有多少个点
+	int pointNum = pts.size();
+	ClockwiseSortPoints(pts);
+	for (int i = 1; i < pts.size(); ++i) {
+		//有两点挨在一起,pointNum-1
+		if (abs(pts[i - 1].x - pts[i].x) < th_x && abs(pts[i - 1].y - pts[i].y) < th_y)
+			--pointNum;
+	}
+	if (pointNum >= 4) return true;
+	return false;
+}
+bool Registrator::has4Points(Point2f pts[], int ptsSize, int th_x, int th_y) {
+	//用来表示有多少个点
+	int pointNum = ptsSize;
+	ClockwiseSortPoints(pts, ptsSize);
+	for (int i = 1; i < ptsSize; ++i) {
+		//有两点挨在一起,pointNum-1
+		if (abs(pts[i - 1].x - pts[i].x) < th_x && abs(pts[i - 1].y - pts[i].y) < th_y)
+			--pointNum;
+	}
+	if (pointNum >= 4) return true;
+	return false;
+}
+
+
+
 
 //以下为画多边形过程
 //以下为画多边形过程
@@ -194,6 +222,8 @@ void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& 
 	Mat midImage;//临时变量和目标图的定义
 	//vector<vector<Point>> pts(1);//存放交点
 
+	pts[0].clear();
+
 	//【2】进行边缘检测和转化为灰度图
 	Canny(srcImage, midImage, 50, 200, 3);//进行一此canny边缘检测
 	cvtColor(midImage, dstImage, COLOR_GRAY2BGR);//转化边缘检测后的图为灰度图
@@ -214,7 +244,7 @@ void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& 
 		pt2.x = cvRound(x0 - 1000 * (-b));
 		pt2.y = cvRound(y0 - 1000 * (a));
 		//画线
-		line(dstImage, pt1, pt2, Scalar(55, 100, 195), 1, LINE_AA);
+		line(dstImage, pt1, pt2, Scalar(55, 100, 195), 3, LINE_AA);
 		//两两求交点
 		for (size_t j = i + 1; j < lines.size(); ++j)
 		{
@@ -235,7 +265,7 @@ void Registrator::intoPoly(Mat& dstImage, vector<vector<Point>>& pts)
 	ClockwiseSortPoints(pts[0]);
 	dstImage = Mat::zeros(Size(dstImage.size()), CV_8UC3);
 	fillPoly(dstImage, pts, Scalar(255, 255, 255));
-	mkdirAndImwrite("1_1.png", dstImage);
+	mkdirAndImwrite("srcPloy.png", dstImage);
 
 
 }
@@ -252,14 +282,14 @@ void Registrator::intoPoly(Mat& dstImage, vector<vector<Point>>& pts)
 
 //从前到后分别为变换矩阵，原图，二值图，结果图，中间图1,2，参照图，flagM表示是否直接用传进来的变换矩阵为1用,succeed表示是否失败过，为1表示失败过要变更参数
 
-bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String FnFi, bool flagM, bool failed, String FnMid1, String FnMid2, String fnRefImg)
+bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnBinImg, String FnFi, bool flagM, bool failed, String FnMid1, String FnMid2, String fnRefImg)
 {
 	//用于记录失败的图片
 	ofstream failedImg; failedImg.open("failedImg.txt", ofstream::app);
 	//IMG1:二值图，refimg：参考二值图，src：原图，dst：结果图
-	Mat Img1 = imread(fnImg1), refImg = imread(fnRefImg), src = imread(FnSrc), dst(src.size(), CV_8UC3);
+	Mat binImg = imread(fnBinImg), refImg = imread(fnRefImg), src = imread(FnSrc), dst(src.size(), CV_8UC3);
 	//没有二值图(png)返回
-	if (Img1.empty()) {
+	if (binImg.empty()) {
 		return 1;
 	}
 	resize(refImg, refImg, Size(src.cols, src.rows));
@@ -271,13 +301,14 @@ bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String F
 
 		//1,2
 		//去除小区域
-		RemoveSmall(Img1, midImg);
+		RemoveSmall(binImg, midImg);
 		try {
 			//获得多边形顶点1（重复3次减少误差默认failed ? CntPoint(midImg, Img1, pts, 15, CV_PI / 240, 800) : CntPoint(midImg, Img1, pts);
-			failed ? CntPoint(midImg, Img1, pts, 12, CV_PI / 180, src.cols * 1000 / 4096) : CntPoint(midImg, Img1, pts, 1, CV_PI / 360, src.cols * 450 / 4096);
+			failed ? CntPoint(midImg, binImg, pts, 12, CV_PI / 180, src.cols * 1000 / 4096) : CntPoint(midImg, binImg, pts, 1, CV_PI / 360, src.cols * 450 / 4096);
+			mkdirAndImwrite("srcLines0.png", binImg);//存储霍夫变换直线识别情况
 			std::cout << pts[0] << std::endl;
 			//由顶点填充多边形1
-			intoPoly(Img1, pts);
+			intoPoly(binImg, pts);
 		}
 		catch (...) {
 			//若已经失败过，记录文件名到txt文件方便以后处理
@@ -294,7 +325,14 @@ bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String F
 		//3.1获取待配准图的顶点，存入0.png
 		pts = vector<vector<Point>>(1);
 		//获得填充好的矩形的顶点
-		CntPoint(Img1, midImg, pts, 7, CV_PI / 180, 700);
+		//CntPoint(binImg, midImg, pts, 7, CV_PI / 180, 700);
+		CntPoint(binImg, midImg, pts, 1, CV_PI / 360, src.cols * 450 / 4096);
+		if (!has4Points(pts[0], src.cols / 4, src.rows / 4))
+			CntPoint(binImg, midImg, pts, 1, CV_PI / 360, src.cols * 350 / 4096);
+		if (!has4Points(pts[0], src.cols / 4, src.rows / 4))
+			CntPoint(binImg, midImg, pts, 1, CV_PI / 360, src.cols * 250 / 4096);
+		if (!has4Points(pts[0], src.cols / 4, src.rows / 4))
+			CntPoint(binImg, midImg, pts, 7, CV_PI / 180, src.cols * 700 / 4096);
 		std::cout << pts[0] << std::endl;
 		mkdirAndImwrite(FnMid1, midImg);//中间图1
 		if (pts[0].size() < 4 || pts[0].size() > 100) {
@@ -322,7 +360,8 @@ bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String F
 		for (int i = 0; i < 4; ++i) {
 			rectPts2F[i] = rectPts[0][i];
 			std::cout << pts2F[i] << std::endl;
-			if (pts2F[i] == Point2f(0, 0)) {
+			//如果有两个点太接近或不足4个点则失败
+			if ((pts2F[i] == Point2f(0, 0)) || ((i > 0) && (abs(pts2F[i - 1].x - pts2F[i].x) < (src.cols / 4) && abs(pts2F[i - 1].y - pts2F[i].y) < (src.rows / 4)))) {
 				//若已经失败过，记录文件名到txt文件方便以后处理
 				if (failed)
 					failedImg << string(FnSrc.c_str()) << std::endl;
@@ -342,7 +381,7 @@ bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnImg1, String F
 	Mat maskedDst;
 	dst.copyTo(maskedDst, refImg);//抠图
 	//测试用，如果失败过在图片上标记
-	if (failed) putText(maskedDst, "2222", Point(1600, 900), FONT_HERSHEY_TRIPLEX, 10, Scalar(0, 0, 255));
+	//if (failed) putText(maskedDst, "2222", Point(1600, 900), FONT_HERSHEY_TRIPLEX, 10, Scalar(0, 0, 255));
 	mkdirAndImwrite(FnFi, maskedDst);//最终结果
 	failedImg.close();
 
@@ -392,7 +431,7 @@ void Registrator::on_mouse(int event, int x, int y, int flags, void* ustc) //eve
 }
 
 
-bool Registrator::Registrating1PicSemi(Mat& M, String FnSrc, String fnImg1, String FnFi, bool flagM, bool succeed, String FnMid1, String FnMid2, String fnRefImg)
+bool Registrator::Registrating1PicSemi(Mat& M, String FnSrc, String fnBinImg, String FnFi, bool flagM, bool succeed, String FnMid1, String FnMid2, String fnRefImg)
 {
 	//IMG1:二值图，refimg：参考二值图，src：原图，dst：结果图
 	Mat refImg = imread(fnRefImg), src = imread(FnSrc), dst(src.size(), CV_8UC3);

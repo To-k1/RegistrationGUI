@@ -227,6 +227,8 @@ void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& 
 	//【2】进行边缘检测和转化为灰度图
 	Canny(srcImage, midImage, 50, 200, 3);//进行一此canny边缘检测
 	cvtColor(midImage, dstImage, COLOR_GRAY2BGR);//转化边缘检测后的图为灰度图
+	//存储Canny边缘检测结果的中间图
+	mkdirAndImwrite("cannyEdge.png", midImage);
 
 	//【3】进行霍夫线变换
 	vector<Vec2f> lines;//定义一个矢量结构lines用于存放得到的线段矢量集合
@@ -239,12 +241,12 @@ void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& 
 		Point pt1, pt2;
 		double a = cos(theta), b = sin(theta);
 		double x0 = a * rho, y0 = b * rho;
-		pt1.x = cvRound(x0 + 1000 * (-b));
-		pt1.y = cvRound(y0 + 1000 * (a));
-		pt2.x = cvRound(x0 - 1000 * (-b));
-		pt2.y = cvRound(y0 - 1000 * (a));
+		pt1.x = cvRound(x0 + 10000 * (-b));
+		pt1.y = cvRound(y0 + 10000 * (a));
+		pt2.x = cvRound(x0 - 10000 * (-b));
+		pt2.y = cvRound(y0 - 10000 * (a));
 		//画线
-		line(dstImage, pt1, pt2, Scalar(55, 100, 195), 3, LINE_AA);
+		line(dstImage, pt1, pt2, Scalar(0, 255, 255), 3, LINE_AA);
 		//两两求交点
 		for (size_t j = i + 1; j < lines.size(); ++j)
 		{

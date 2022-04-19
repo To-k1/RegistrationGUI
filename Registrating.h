@@ -49,7 +49,7 @@ signals:
 	void sendProcess(const QString processingName, const int processingNum, const int allNum);
 
 private:
-	static void mkdirAndImwrite(const String& filename, InputArray& img);
+	static void mkdirAndImwrite(const String& filename, const InputArray& img);
 
 	//PointSort
 	static bool SetSortRuleX(const Point p1, const Point p2);
@@ -60,28 +60,31 @@ private:
 
 	//对点进行顺时针排序，保证能正确绘制矩形
 	static void ClockwiseSortPoints(vector<Point>& pts);
-	static void ClockwiseSortPoints(Point2f pts[], int ptsSize);
+	static void ClockwiseSortPoints(Point2f pts[], const int ptsSize);
 	static double KAngle(const Point& a, const Point& center);
 
 	//输入一个数组，返回他是否有4个不同顶点,后两个参数分别是两个点被判断为至少需要有的x，y轴距离
-	static bool has4Points(vector<Point>& pts, int th_x, int th_y);
-	static bool has4Points(Point2f pts[], int ptsSize, int th_x, int th_y);
+	static bool has4Points(vector<Point>& pts, const int th_x, const int th_y);
+	static bool has4Points(Point2f pts[], const int ptsSize, const int th_x, const int th_y);
 
 	//intoPoly
 	static int RemoveSmall(Mat& src, Mat& dst);
-	static void SolvEqu(double a, double b, double c, double d, double e, double f, double& x, double& y);
+	static void SolvEqu(const double a, const double b, const double c, const double d, const double e, const double f, double& x, double& y);
 	//默认static void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 10, double theta_h = CV_PI / 240, double th_h = 1400);
 	//static void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 12, double theta_h = CV_PI / 240, double th_h = 1000);
 
-	static void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h = 1, double theta_h = CV_PI / 360, double th_h = 450, double srn = 0, double stn = 0);
+	static void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, const double rho_h = 1, const double theta_h = CV_PI / 360, const double th_h = 450, const double srn = 0, const double stn = 0);
 	static void intoPoly(Mat& dstImage, vector<vector<Point>>& pts);
+
+	//处理文件路径
+	static void GetFilePath(vector<String>& srcNames, const string& srcPattern, const char useFailedImg = 'n');
 
 	//Registrating
 	//默认bool Registrating1Pic(Mat& M, String FnSrc = "005.jpg", String fnImg1 = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "0.png", String FnMid2 = "01.png", String fnRefImg = "refImg.png");
-	static bool Registrating1Pic(Mat& M, String FnSrc = "005.jpg", String fnBinImg = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "srcLines.png", String FnMid2 = "refLines.png", String fnRefImg = "refImg.png");
-	static void renameRoot(String srcPattern);
+	static bool Registrating1Pic(Mat& M, const String FnSrc = "005.jpg", const String fnBinImg = "1.png", const String FnFi = "fi.png", const bool flagM = false, const bool succeed = false, const String FnMid1 = "srcLines.png", const String FnMid2 = "refLines.png", const String fnRefImg = "refImg.png");
+	static void renameRoot(const String srcPattern);
 	static void on_mouse(int event, int x, int y, int flags, void* ustc);
-	static bool Registrating1PicSemi(Mat& M, String FnSrc = "005.jpg", String fnBinImg = "1.png", String FnFi = "fi.png", bool flagM = false, bool succeed = false, String FnMid1 = "srcLines.png", String FnMid2 = "refLines.png", String fnRefImg = "refImg.png");
+	static bool Registrating1PicSemi(Mat& M, const String FnSrc = "005.jpg", const String fnBinImg = "1.png", const String FnFi = "fi.png", const bool flagM = false, const bool succeed = false, const String FnMid1 = "srcLines.png", const String FnMid2 = "refLines.png", const String fnRefImg = "refImg.png");
 
 	bool is_paused;
 };

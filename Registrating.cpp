@@ -10,7 +10,7 @@ Mat ref_win, src_win;
 
 //若有目录就保存，没有目录就创建并保存
 
-void Registrator::mkdirAndImwrite(const String& filename, InputArray& img) {
+void Registrator::mkdirAndImwrite(const String& filename, const InputArray& img) {
 	fs::path fp(filename.c_str());
 	fp = fp.parent_path();
 	if (!fp.string().empty())
@@ -106,7 +106,7 @@ void Registrator::ClockwiseSortPoints(vector<Point>& pts)
 
 //重载
 
-void Registrator::ClockwiseSortPoints(Point2f pts[], int ptsSize)
+void Registrator::ClockwiseSortPoints(Point2f pts[], const int ptsSize)
 {
 	//计算重心
 	Point center;
@@ -146,7 +146,7 @@ void Registrator::ClockwiseSortPoints(Point2f pts[], int ptsSize)
 
 
 //输入一个数组，返回他是否有4个不同顶点
-bool Registrator::has4Points(vector<Point>& pts, int th_x, int th_y) {
+bool Registrator::has4Points(vector<Point>& pts, const int th_x, const int th_y) {
 	//用来表示有多少个点
 	int pointNum = pts.size();
 	ClockwiseSortPoints(pts);
@@ -158,7 +158,7 @@ bool Registrator::has4Points(vector<Point>& pts, int th_x, int th_y) {
 	if (pointNum >= 4) return true;
 	return false;
 }
-bool Registrator::has4Points(Point2f pts[], int ptsSize, int th_x, int th_y) {
+bool Registrator::has4Points(Point2f pts[], const int ptsSize, const int th_x, const int th_y) {
 	//用来表示有多少个点
 	int pointNum = ptsSize;
 	ClockwiseSortPoints(pts, ptsSize);
@@ -205,7 +205,7 @@ int Registrator::RemoveSmall(Mat& src, Mat& dst) {
 
 //给二元一次方程组求解(带过程){ax+by+c=0 dx+ey+f=0}
 
-void Registrator::SolvEqu(double a, double b, double c, double d, double e, double f, double& x, double& y)
+void Registrator::SolvEqu(const double a, const double b, const double c, const double d, const double e, const double f, double& x, double& y)
 {
 	y = (double)((-f * 1.0 + d * c * 1.0 / a) * 1.0 / (-d * b * 1.0 / a + e * 1.0));
 	x = (double)((-c * 1.0 - b * y * 1.0) * 1.0 / a);
@@ -215,7 +215,7 @@ void Registrator::SolvEqu(double a, double b, double c, double d, double e, doub
 
 //获得直线交点,第4,5,6个参数是HoughLines的rho精度，theta精度和长度阈值
 
-void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, double rho_h, double theta_h, double th_h, double srn, double stn)
+void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, const double rho_h, const double theta_h, const double th_h, const double srn, const double stn)
 {
 	//【1】载入原始图和Mat变量定义   
 	//Mat srcImage = imread("remove.png");  //工程目录下应该有一张名为remove.png的素材图
@@ -284,7 +284,7 @@ void Registrator::intoPoly(Mat& dstImage, vector<vector<Point>>& pts)
 
 //从前到后分别为变换矩阵，原图，二值图，结果图，中间图1,2，参照图，flagM表示是否直接用传进来的变换矩阵为1用,succeed表示是否失败过，为1表示失败过要变更参数
 
-bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnBinImg, String FnFi, bool flagM, bool failed, String FnMid1, String FnMid2, String fnRefImg)
+bool Registrator::Registrating1Pic(Mat& M, const String FnSrc, const String fnBinImg, const String FnFi, const bool flagM, const bool failed, const String FnMid1, const String FnMid2, const String fnRefImg)
 {
 	//用于记录失败的图片
 	ofstream failedImg; failedImg.open("failedImg.txt", ofstream::app);
@@ -396,7 +396,7 @@ bool Registrator::Registrating1Pic(Mat& M, String FnSrc, String fnBinImg, String
 
 
 
-void Registrator::renameRoot(String srcPattern) {
+void Registrator::renameRoot(const String srcPattern) {
 	vector<String> srcNames;//保存图名
 	glob(srcPattern, srcNames, true);
 	for (int i = 0; i < srcNames.size(); ++i) {
@@ -433,7 +433,7 @@ void Registrator::on_mouse(int event, int x, int y, int flags, void* ustc) //eve
 }
 
 
-bool Registrator::Registrating1PicSemi(Mat& M, String FnSrc, String fnBinImg, String FnFi, bool flagM, bool succeed, String FnMid1, String FnMid2, String fnRefImg)
+bool Registrator::Registrating1PicSemi(Mat& M, const String FnSrc, const String fnBinImg, const String FnFi, const bool flagM, const bool succeed, const String FnMid1, const String FnMid2, const String fnRefImg)
 {
 	//IMG1:二值图，refimg：参考二值图，src：原图，dst：结果图
 	Mat refImg = imread(fnRefImg), src = imread(FnSrc), dst(src.size(), CV_8UC3);
@@ -487,7 +487,20 @@ bool Registrator::Registrating1PicSemi(Mat& M, String FnSrc, String fnBinImg, St
 }
 
 
-
+//处理文件路径
+void Registrator::GetFilePath(vector<String>& srcNames, const string& srcPattern, const char useFailedImg) {
+	if (useFailedImg == 'y') {
+		ifstream failedImg("failedImg.txt");
+		string line;
+		while (getline(failedImg, line)) {
+			srcNames.push_back(line);
+		}
+	}
+	else {
+		renameRoot(srcPattern);
+		glob(srcPattern, srcNames, true);
+	}
+}
 
 //完成整个配准过程
 
@@ -502,17 +515,22 @@ void Registrator::registrating(const string& srcPattern, const string& binPatter
 	//char useFailedImg = 'y';//如果为y则使用failedImg.txt作为文件列表
 	//std::cout << "是否使用上次失败的文件列表？[y/n]" << std::endl;
 	//cin >> useFailedImg;
-	if (useFailedImg == 'y') {
-		ifstream failedImg("failedImg.txt");
-		string line;
-		while (getline(failedImg, line)) {
-			srcNames.push_back(line);
-		}
-	}
-	else {
-		renameRoot(srcPattern);
-		glob(srcPattern, srcNames, true);
-	}
+
+	////得到源文件目录
+	//if (useFailedImg == 'y') {
+	//	ifstream failedImg("failedImg.txt");
+	//	string line;
+	//	while (getline(failedImg, line)) {
+	//		srcNames.push_back(line);
+	//	}
+	//}
+	//else {
+	//	renameRoot(srcPattern);
+	//	glob(srcPattern, srcNames, true);
+	//}
+	GetFilePath(srcNames, srcPattern, useFailedImg);
+
+
 	//仅自动配准且从头开始时用于清空失败的图片列表
 	if (useSemiAuto != 'y' || startPos == 0) {
 		ofstream failedImg("failedImg.txt");

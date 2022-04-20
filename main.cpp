@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
 //	char useSemiAuto = 'n';
 //	char useFailedImg = 'n';
 //	int startPos = 0;
-//	Registrator registrator;
-//	registrator.registrating(srcPattern, binPattern, dstPattern, useSemiAuto, useFailedImg, startPos);
+//	Worker Worker;
+//	Worker.Registrating(srcPattern, binPattern, dstPattern, useSemiAuto, useFailedImg, startPos);
 //
 //	return 0;
 //}

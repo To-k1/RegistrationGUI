@@ -1,16 +1,13 @@
-﻿#include "Registrating.h"
+﻿#include "Registrator.h"
 
 
 vector<vector<Point>> pts(1), rectPts(1);//存放交点
 Mat ref_win, src_win;
 
 
-
-
-
 //若有目录就保存，没有目录就创建并保存
 
-void Registrator::mkdirAndImwrite(const String& filename, const InputArray& img) {
+void Registrator::MkdirAndImwrite(const String& filename, const InputArray& img) {
 	fs::path fp(filename.c_str());
 	fp = fp.parent_path();
 	if (!fp.string().empty())
@@ -146,7 +143,7 @@ void Registrator::ClockwiseSortPoints(Point2f pts[], const int ptsSize)
 
 
 //输入一个数组，返回他是否有4个不同顶点
-bool Registrator::has4Points(vector<Point>& pts, const int th_x, const int th_y) {
+bool Registrator::Has4Points(vector<Point>& pts, const int th_x, const int th_y) {
 	//用来表示有多少个点
 	int pointNum = pts.size();
 	ClockwiseSortPoints(pts);
@@ -158,7 +155,7 @@ bool Registrator::has4Points(vector<Point>& pts, const int th_x, const int th_y)
 	if (pointNum >= 4) return true;
 	return false;
 }
-bool Registrator::has4Points(Point2f pts[], const int ptsSize, const int th_x, const int th_y) {
+bool Registrator::Has4Points(Point2f pts[], const int ptsSize, const int th_x, const int th_y) {
 	//用来表示有多少个点
 	int pointNum = ptsSize;
 	ClockwiseSortPoints(pts, ptsSize);
@@ -183,7 +180,7 @@ bool Registrator::has4Points(Point2f pts[], const int ptsSize, const int th_x, c
 int Registrator::RemoveSmall(Mat& src, Mat& dst) {
 
 	inRange(src, Scalar(0, 100, 0), Scalar(255, 255, 255), dst);
-	mkdirAndImwrite("original.png", dst);
+	MkdirAndImwrite("original.png", dst);
 
 	// 提取连通区域，并剔除小面积联通区域
 	vector<vector<Point>> contours;
@@ -197,7 +194,7 @@ int Registrator::RemoveSmall(Mat& src, Mat& dst) {
 	// 显示图像并保存
 	dst.setTo(0);
 	drawContours(dst, contours, -1, Scalar(255), FILLED);
-	mkdirAndImwrite("remove.png", dst);
+	MkdirAndImwrite("remove.png", dst);
 	return 0;
 }
 
@@ -228,7 +225,7 @@ void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& 
 	Canny(srcImage, midImage, 50, 200, 3);//进行一此canny边缘检测
 	cvtColor(midImage, dstImage, COLOR_GRAY2BGR);//转化边缘检测后的图为灰度图
 	//存储Canny边缘检测结果的中间图
-	mkdirAndImwrite("cannyEdge.png", midImage);
+	MkdirAndImwrite("cannyEdge.png", midImage);
 
 	//【3】进行霍夫线变换
 	vector<Vec2f> lines;//定义一个矢量结构lines用于存放得到的线段矢量集合
@@ -261,13 +258,13 @@ void Registrator::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& 
 }
 
 
-void Registrator::intoPoly(Mat& dstImage, vector<vector<Point>>& pts)
+void Registrator::IntoPoly(Mat& dstImage, vector<vector<Point>>& pts)
 {
 	//将交点排序并连成多边形并填充
 	ClockwiseSortPoints(pts[0]);
 	dstImage = Mat::zeros(Size(dstImage.size()), CV_8UC3);
 	fillPoly(dstImage, pts, Scalar(255, 255, 255));
-	mkdirAndImwrite("srcPloy.png", dstImage);
+	MkdirAndImwrite("srcPloy.png", dstImage);
 
 
 }
@@ -307,10 +304,10 @@ bool Registrator::Registrating1Pic(Mat& M, const String FnSrc, const String fnBi
 		try {
 			//获得多边形顶点1（重复3次减少误差默认failed ? CntPoint(midImg, Img1, pts, 15, CV_PI / 240, 800) : CntPoint(midImg, Img1, pts);
 			failed ? CntPoint(midImg, binImg, pts, 12, CV_PI / 180, src.cols * 1000 / 4096) : CntPoint(midImg, binImg, pts, 1, CV_PI / 360, src.cols * 450 / 4096);
-			mkdirAndImwrite("srcLines0.png", binImg);//存储霍夫变换直线识别情况
+			MkdirAndImwrite("srcLines0.png", binImg);//存储霍夫变换直线识别情况
 			std::cout << pts[0] << std::endl;
 			//由顶点填充多边形1
-			intoPoly(binImg, pts);
+			IntoPoly(binImg, pts);
 		}
 		catch (...) {
 			//若已经失败过，记录文件名到txt文件方便以后处理
@@ -329,25 +326,25 @@ bool Registrator::Registrating1Pic(Mat& M, const String FnSrc, const String fnBi
 		//获得填充好的矩形的顶点
 		//CntPoint(binImg, midImg, pts, 7, CV_PI / 180, 700);
 		CntPoint(binImg, midImg, pts, 1, CV_PI / 360, src.cols * 450 / 4096);
-		if (!has4Points(pts[0], src.cols / 4, src.rows / 4))
+		if (!Has4Points(pts[0], src.cols / 4, src.rows / 4))
 			CntPoint(binImg, midImg, pts, 1, CV_PI / 360, src.cols * 350 / 4096);
-		if (!has4Points(pts[0], src.cols / 4, src.rows / 4))
+		if (!Has4Points(pts[0], src.cols / 4, src.rows / 4))
 			CntPoint(binImg, midImg, pts, 1, CV_PI / 360, src.cols * 250 / 4096);
-		if (!has4Points(pts[0], src.cols / 4, src.rows / 4))
+		if (!Has4Points(pts[0], src.cols / 4, src.rows / 4))
 			CntPoint(binImg, midImg, pts, 7, CV_PI / 180, src.cols * 700 / 4096);
 		std::cout << pts[0] << std::endl;
-		mkdirAndImwrite(FnMid1, midImg);//中间图1
+		MkdirAndImwrite(FnMid1, midImg);//中间图1
 		if (pts[0].size() < 4 || pts[0].size() > 100) {
 			std::cout << "识别不到4个顶点" << std::endl;
 			Mat temp = midImg;
-			mkdirAndImwrite(FnFi, temp);
+			MkdirAndImwrite(FnFi, temp);
 			return false;
 		}
 
 		//3.1获取基准图顶点，存入01.png
 		CntPoint(refImg, midImg, rectPts);
 		std::cout << rectPts[0] << std::endl;
-		mkdirAndImwrite(FnMid2, midImg);//中间图2
+		MkdirAndImwrite(FnMid2, midImg);//中间图2
 
 		//顶点排序
 		ClockwiseSortPoints(pts[0]); ClockwiseSortPoints(rectPts[0]);
@@ -384,7 +381,7 @@ bool Registrator::Registrating1Pic(Mat& M, const String FnSrc, const String fnBi
 	dst.copyTo(maskedDst, refImg);//抠图
 	//测试用，如果失败过在图片上标记
 	//if (failed) putText(maskedDst, "2222", Point(1600, 900), FONT_HERSHEY_TRIPLEX, 10, Scalar(0, 0, 255));
-	mkdirAndImwrite(FnFi, maskedDst);//最终结果
+	MkdirAndImwrite(FnFi, maskedDst);//最终结果
 	failedImg.close();
 
 
@@ -396,7 +393,7 @@ bool Registrator::Registrating1Pic(Mat& M, const String FnSrc, const String fnBi
 
 
 
-void Registrator::renameRoot(const String srcPattern) {
+void Registrator::RenameRoot(const String srcPattern) {
 	vector<String> srcNames;//保存图名
 	glob(srcPattern, srcNames, true);
 	for (int i = 0; i < srcNames.size(); ++i) {
@@ -479,7 +476,7 @@ bool Registrator::Registrating1PicSemi(Mat& M, const String FnSrc, const String 
 	warpPerspective(src, dst, M, Size(src.cols, src.rows));
 	Mat maskedDst;
 	dst.copyTo(maskedDst, refImg);//抠图
-	mkdirAndImwrite(FnFi, maskedDst);//最终结果
+	MkdirAndImwrite(FnFi, maskedDst);//最终结果
 
 
 
@@ -497,136 +494,10 @@ void Registrator::GetFilePath(vector<String>& srcNames, const string& srcPattern
 		}
 	}
 	else {
-		renameRoot(srcPattern);
+		RenameRoot(srcPattern);
 		glob(srcPattern, srcNames, true);
 	}
 }
-
-//完成整个配准过程
-
-void Registrator::registrating(const string& srcPattern, const string& binPattern, const string& dstPattern, const char useSemiAuto, const char useFailedImg, const int startPos) {
-	//qDebug() << "12311111111111111111111111111111111111111111111";
-	vector<String> srcNames;//保存图名
-	//String srcPattern = "E:\\root\\";
-	//String srcPattern = "srcImg";
-	//char useSemiAuto = 'y';//如果为y则使用半自动配准
-	//std::cout << "是否使用半自动配准？[y/n]" << std::endl;
-	//cin >> useSemiAuto;
-	//char useFailedImg = 'y';//如果为y则使用failedImg.txt作为文件列表
-	//std::cout << "是否使用上次失败的文件列表？[y/n]" << std::endl;
-	//cin >> useFailedImg;
-
-	////得到源文件目录
-	//if (useFailedImg == 'y') {
-	//	ifstream failedImg("failedImg.txt");
-	//	string line;
-	//	while (getline(failedImg, line)) {
-	//		srcNames.push_back(line);
-	//	}
-	//}
-	//else {
-	//	renameRoot(srcPattern);
-	//	glob(srcPattern, srcNames, true);
-	//}
-	GetFilePath(srcNames, srcPattern, useFailedImg);
-
-
-	//仅自动配准且从头开始时用于清空失败的图片列表
-	if (useSemiAuto != 'y' || startPos == 0) {
-		ofstream failedImg("failedImg.txt");
-		failedImg.close();
-	}
-	String binName, dstName;
-	Mat M;//变换矩阵
-	fs::path fnPath;
-
-	for (int i = startPos; i < srcNames.size(); ++i) {
-		//若暂停了就退出，此时进度上显示的序号正好是下一个文件名的下标
-		if (this->isPaused()) {
-			//emit set_pause();
-			emit handlePause();
-			return;
-		}
-
-		////任务进度
-		//string progress(std::to_string(i) + "/" + std::to_string(srcNames.size()));
-		////win->set_labelProgress_text(QString::fromStdString(progress));
-		//emit set_labelProgress_text(QString::fromStdString(progress));
-		////显示百分比进度
-		////win->set_progressBar_val(int(100*double(i+1)/srcNames.size()));
-		//emit set_progressBar_val(int(100 * double(i) / srcNames.size()));
-		////输出进度
-		////std::cout << srcNames[i] << std::endl; std::cout << binName << std::endl; std::cout << dstName << std::endl;
-		////win->set_labelProcessingName_text(QString::fromStdString(srcNames[i]));
-		//emit set_labelProcessingName_text(QString::fromStdString(srcNames[i]));
-		emit sendProcess(QString::fromStdString(srcNames[i]), i, srcNames.size());
-
-
-
-
-		bool flagM = true;
-		int startChar = srcPattern.size() + 1;//除去floderPattern外的第一个字符下标
-		String fn(srcNames[i], startChar, srcNames[i].size() - startChar);//从startChar开始,得到相对于srcNames[i]的路径
-		fnPath = fn.c_str();
-		//获得后缀如jpg,png
-		//String fnTail(srcNames[i], srcNames[i].size() - 4, 4);
-		String fnTail(fnPath.extension().string());
-		//去掉fn的后缀名如.jpg
-		fn = fnPath.parent_path().string() + "\\" + fnPath.stem().string();
-		//if (srcNames[i].size() < 23) continue;
-		if (fnTail != ".png" && fnTail != ".jpg") continue;
-		//用于分割后2个根的路径(短，如052_1.png
-		if (fn[fn.size() - 2] == '-' || fn[fn.size() - 2] == '_') {
-			binName = binPattern + "\\" + String(fn, 0, fn.size() - 2) + ".png";
-		}
-		//用于分割后2个根的路径(长，如001_Right_F0_01.png
-		else if ((fn[fn.size() - 3] == '-' || fn[fn.size() - 3] == '_')) {
-			if (fn[fn.size() - 5] != 'F' && fn[fn.size() - 5] != 'R') continue;
-			binName = binPattern + "\\" + String(fn, 0, fn.size() - 12) + ".png";
-		}
-		//一般原图路径如052.png
-		else {
-			binName = binPattern + "\\" + fn + ".png";
-			flagM = false;
-			std::cout << "原图" << std::endl;
-		}
-
-
-		//dstName = String("F:\\RootImg\\") + fn + ".png";
-		dstName = dstPattern + "\\" + fn + ".png";
-
-
-
-		if (fnTail != ".png" && fnTail != ".jpg") continue;
-
-		if (useSemiAuto != 'y') {
-			if (!Registrating1Pic(M, srcNames[i], binName, dstName, flagM))//失败
-				Registrating1Pic(M, srcNames[i], binName, dstName, flagM, true);
-		}
-		else {
-			if (!Registrating1PicSemi(M, srcNames[i], binName, dstName, flagM))//失败
-				Registrating1PicSemi(M, srcNames[i], binName, dstName, flagM, true);
-		}
-
-		pts[0].clear(), rectPts[0].clear();
-
-
-	}
-	//仅在全自动程序成功运行结束时把这次的失败列表备份
-	if (useSemiAuto != 'y')
-		CopyFile(L"failedImg.txt", L"failedImg.txt.bak", FALSE);
-	//// 先更新进度到完成再发送结束信号
-	//string progress(std::to_string(srcNames.size()) + "/" + std::to_string(srcNames.size()));
-	////win->set_labelProgress_text(QString::fromStdString(progress));
-	//emit set_labelProgress_text(QString::fromStdString(progress));
-	////显示百分比进度
-	////win->set_progressBar_val(int(100*double(i+1)/srcNames.size()));
-	//emit set_progressBar_val(100);
-	//emit resultReady();
-	emit sendProcess(QString::fromStdString(srcNames.back()), srcNames.size(), srcNames.size());
-
-}
-
 
 
 

@@ -53,21 +53,21 @@ void MainWindow::on_pushButtonRun_clicked()
 	string filePattern(ui->lineEditSrc->text().toStdString());
 	string binImg(ui->lineEditBin->text().toStdString());
 	string dstImg(ui->lineEditDst->text().toStdString());
-	//将Registrator初始化到线程workerThread上
-	worker = new Registrator();
+	//将Worker初始化到线程workerThread上
+	worker = new Worker();
 	worker->moveToThread(&workerThread);
 
 	//用于传递程序进度信息
-	connect(worker, &Registrator::sendProcess, this, &MainWindow::sendProcess);
-	//connect(worker, &Registrator::set_labelProcessingName_text, this, &MainWindow::set_labelProcessingName_text);
-	//connect(worker, &Registrator::set_labelProgress_text, this, &MainWindow::set_labelProgress_text);
-	//connect(worker, &Registrator::set_progressBar_val, this, &MainWindow::set_progressBar_val);
+	connect(worker, &Worker::SendProcess, this, &MainWindow::SendProcess);
+	//connect(worker, &Worker::set_labelProcessingName_text, this, &MainWindow::set_labelProcessingName_text);
+	//connect(worker, &Worker::set_labelProgress_text, this, &MainWindow::set_labelProgress_text);
+	//connect(worker, &Worker::set_progressBar_val, this, &MainWindow::set_progressBar_val);
 	//用于暂停和恢复
-	connect(worker, &Registrator::handlePause, this, &MainWindow::handlePause);
+	connect(worker, &Worker::HandlePause, this, &MainWindow::HandlePause);
 	//operate信号发射后启动线程工作
-	connect(this, &MainWindow::operate, worker, &Registrator::registrating);
+	connect(this, &MainWindow::operate, worker, &Worker::Registrating);
 	//线程结束后发送信号，对结果进行处理
-	connect(worker, &Registrator::handleResults, this, &MainWindow::handleResults);
+	connect(worker, &Worker::HandleResults, this, &MainWindow::HandleResults);
 	//按钮变灰和激活
 	ui->pushButtonRun->setEnabled(false);
 	ui->pushButtonPause->setEnabled(true);
@@ -123,7 +123,7 @@ void MainWindow::on_pushButtonResume_clicked()
 //	ui->progressBar->setValue(val);
 //}
 
-void MainWindow::handleResults() {
+void MainWindow::HandleResults() {
 	workerThread.quit();
 	workerThread.wait();
 	ui->pushButtonPause->setEnabled(false);
@@ -131,14 +131,14 @@ void MainWindow::handleResults() {
 	ui->labelProcessingName->setText("已完成");
 }
 
-void MainWindow::handlePause() {
+void MainWindow::HandlePause() {
 	workerThread.quit();
 	workerThread.wait();
 	ui->pushButtonResume->setEnabled(true);
 	ui->labelProcessingName->setText(QString::fromStdString("已暂停"));
 }
 
-void MainWindow::sendProcess(const QString processingName, const int processingNum, const int allNum) {
+void MainWindow::SendProcess(const QString processingName, const int processingNum, const int allNum) {
 	//任务进度
 	string progress(std::to_string(processingNum) + "/" + std::to_string(allNum));
 	ui->labelProgress->setText(QString::fromStdString(progress));
@@ -146,7 +146,7 @@ void MainWindow::sendProcess(const QString processingName, const int processingN
 	ui->progressBar->setValue(int(100 * double(processingNum) / allNum));
 	//输出进度
 	ui->labelProcessingName->setText(processingName);
-	if (processingNum == allNum) handleResults();
+	if (processingNum == allNum) HandleResults();
 }
 
 

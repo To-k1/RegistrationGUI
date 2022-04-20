@@ -9,7 +9,7 @@
 #include <QObject>
 #include <QThread>
 #include <opencv2/opencv.hpp>
-#include "Registrating.h"
+#include "Worker.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -35,12 +35,12 @@ signals:
 	//void operate(cv::String& srcPattern, cv::String& binPattern, cv::String& dstPattern, char useSemiAuto, char useFailedImg, int startPos = 0);
 
 public slots:
-	void handleResults();
-	void handlePause();
+	void HandleResults();
+	void HandlePause();
 	//void set_labelProcessingName_text(const QString& text);
 	//void set_labelProgress_text(const QString& text);
 	//void set_progressBar_val(int val);
-	void sendProcess(const QString processingName, const int processingNum, const int allNum);
+	void SendProcess(const QString processingName, const int processingNum, const int allNum);
 
 private slots:
 	void on_pushButtonSrc_clicked();
@@ -64,7 +64,7 @@ private:
 	//分别决定是否使用手动配准和失败文件列表，默认为'n'
 	char semiauto;
 	char failed_list;
-	Registrator* worker;
+	Worker* worker;
 };
 
 #endif // MAINWINDOW_H

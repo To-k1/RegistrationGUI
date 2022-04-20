@@ -47,7 +47,7 @@ namespace Registration
 	void ClockwiseSortPoints(Point2f pts[], const int ptsSize);
 	double KAngle(const Point& a, const Point& center);
 
-	//输入一个数组，返回他是否有4个不同顶点,后两个参数分别是两个点被判断为至少需要有的x，y轴距离
+	//输入一个数组，返回他是否有4个不同顶点,后两个参数分别是两个点被判断为至少需要有的x，y轴距离 
 	bool Has4Points(vector<Point>& pts, const int th_x, const int th_y);
 	bool Has4Points(Point2f pts[], const int ptsSize, const int th_x, const int th_y);
 

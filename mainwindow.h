@@ -9,7 +9,7 @@
 #include <QObject>
 #include <QThread>
 #include <opencv2/opencv.hpp>
-#include "Worker.h"
+#include "Registrator.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -64,7 +64,7 @@ private:
 	//分别决定是否使用手动配准和失败文件列表，默认为'n'
 	char semiauto;
 	char failed_list;
-	Worker* worker;
+	Registrator* worker;
 };
 
 #endif // MAINWINDOW_H

@@ -53,21 +53,21 @@ void MainWindow::on_pushButtonRun_clicked()
 	string filePattern(ui->lineEditSrc->text().toStdString());
 	string binImg(ui->lineEditBin->text().toStdString());
 	string dstImg(ui->lineEditDst->text().toStdString());
-	//将Worker初始化到线程workerThread上
-	worker = new Worker();
+	//将Registrator初始化到线程workerThread上
+	worker = new Registrator();
 	worker->moveToThread(&workerThread);
 
 	//用于传递程序进度信息
-	connect(worker, &Worker::SendProcess, this, &MainWindow::SendProcess);
-	//connect(worker, &Worker::set_labelProcessingName_text, this, &MainWindow::set_labelProcessingName_text);
-	//connect(worker, &Worker::set_labelProgress_text, this, &MainWindow::set_labelProgress_text);
-	//connect(worker, &Worker::set_progressBar_val, this, &MainWindow::set_progressBar_val);
+	connect(worker, &Registrator::SendProcess, this, &MainWindow::SendProcess);
+	//connect(worker, &Registrator::set_labelProcessingName_text, this, &MainWindow::set_labelProcessingName_text);
+	//connect(worker, &Registrator::set_labelProgress_text, this, &MainWindow::set_labelProgress_text);
+	//connect(worker, &Registrator::set_progressBar_val, this, &MainWindow::set_progressBar_val);
 	//用于暂停和恢复
-	connect(worker, &Worker::HandlePause, this, &MainWindow::HandlePause);
+	connect(worker, &Registrator::HandlePause, this, &MainWindow::HandlePause);
 	//operate信号发射后启动线程工作
-	connect(this, &MainWindow::operate, worker, &Worker::Registrating);
+	connect(this, &MainWindow::operate, worker, &Registrator::Registrating);
 	//线程结束后发送信号，对结果进行处理
-	connect(worker, &Worker::HandleResults, this, &MainWindow::HandleResults);
+	connect(worker, &Registrator::HandleResults, this, &MainWindow::HandleResults);
 	//按钮变灰和激活
 	ui->pushButtonRun->setEnabled(false);
 	ui->pushButtonPause->setEnabled(true);

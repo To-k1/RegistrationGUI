@@ -46,6 +46,7 @@ public:
 public slots:
 	//参数分别为源文件父目录，根箱二值图父目录，目标文件存储目录，是否使用半自动[y/n]，是否使用失败文件列表[y/n]，从第几个文件开始(默认为0，用于暂停)
 	void Registrating(const string& srcPattern, const string& binPattern, const string& dstPattern, const char useSemiAuto, const char useFailedImg, const int startPos = 0);
+	void GetRectVertices(const string& srcPattern, const string& binPattern, const int startPos = 0);
 signals:
 	void HandleResults();
 	void HandlePause();

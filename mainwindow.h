@@ -31,8 +31,8 @@ public:
 	inline char getFailed() { return failed_list; }
 
 signals:
-	void operate(const string& srcPattern, const string& binPattern, const string& dstPattern, const char useSemiAuto, const char useFailedImg, const int startPos = 0);
-	//void operate(cv::String& srcPattern, cv::String& binPattern, cv::String& dstPattern, char useSemiAuto, char useFailedImg, int startPos = 0);
+    void operate(const std::string& srcPattern, const std::string& binPattern, const std::string& dstPattern, const char useSemiAuto, const char useFailedImg, const int startPos = 0);
+    void operate(const std::string& srcPattern, const std::string& binPattern, const int startPos = 0);
 
 public slots:
 	void HandleResults();
@@ -58,6 +58,8 @@ private slots:
 	void on_pushButtonPause_clicked();
 
 	void on_pushButtonResume_clicked();
+
+	void on_checkBoxGetRect_stateChanged(int arg1);
 
 private:
 	Ui::MainWindow* ui;

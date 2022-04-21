@@ -1,7 +1,7 @@
 ﻿#include "Registrator.h"
 
 
-//完成整个配准过程
+
 
 
 bool Registrator::handle_pause(Registrator* worker) {
@@ -21,6 +21,10 @@ void Registrator::Registrating(const string& srcPattern, const string& binPatter
 
 	Registration::Registrating(srcPattern, binPattern, dstPattern, useSemiAuto, useFailedImg, handle_pause, send_process, this, startPos);
 
+}
+
+void Registrator::GetRectVertices(const string& srcPattern, const string& binPattern, const int startPos) {
+	Registration::GetRectVertices(srcPattern, binPattern, handle_pause, send_process, this, startPos);
 }
 
 

@@ -118,7 +118,7 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1,1,1">
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="3,3,2,2,2">
         <property name="spacing">
          <number>6</number>
         </property>
@@ -154,6 +154,16 @@
          </layout>
         </item>
         <item>
+         <widget class="QCheckBox" name="checkBoxGetRect">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>分割轮廓</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QCheckBox" name="checkBoxSemiAuto">
           <property name="text">
            <string>手动配准</string>
@@ -175,7 +185,7 @@
          <number>6</number>
         </property>
         <item>
-         <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,0">
+         <layout class="QGridLayout" name="gridLayout_3" columnstretch="0">
           <property name="spacing">
            <number>0</number>
           </property>

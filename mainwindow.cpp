@@ -47,6 +47,26 @@ void MainWindow::on_checkBoxFailedList_stateChanged(int arg1)
 	(arg1 == 2) ? (this->failed_list = 'y') : (this->failed_list = 'n');
 }
 
+void MainWindow::on_checkBoxGetRect_stateChanged(int arg1)
+{
+	//按下
+	if (arg1 == 2) {
+        ui->checkBoxFailedList->setEnabled(false);
+        ui->checkBoxSemiAuto->setEnabled(false);
+        ui->lineEditDst->setEnabled(false);
+        string binName = ui->lineEditBin->text().toStdString() + "NoDeepLearning";
+        ui->lineEditBin->setText(QString::fromStdString(binName));
+	}
+    else{
+        ui->checkBoxFailedList->setEnabled(true);
+        ui->checkBoxSemiAuto->setEnabled(true);
+        ui->lineEditDst->setEnabled(true);
+        int binNameSize = ui->lineEditBin->text().size();
+        string binName (ui->lineEditBin->text().toStdString(), 0, binNameSize - 14);
+        ui->lineEditBin->setText(QString::fromStdString(binName));
+    }
+}
+
 
 void MainWindow::on_pushButtonRun_clicked()
 {
@@ -65,21 +85,44 @@ void MainWindow::on_pushButtonRun_clicked()
 	//用于暂停和恢复
 	connect(worker, &Registrator::HandlePause, this, &MainWindow::HandlePause);
 	//operate信号发射后启动线程工作
-	connect(this, &MainWindow::operate, worker, &Registrator::Registrating);
+    //若勾选分割轮廓，则分割轮廓，否则配准
+    if(ui->checkBoxGetRect->isChecked()){
+        //分割
+        connect(this, qOverload<const std::string&, const std::string&, const int>(&MainWindow::operate),
+                worker, &Registrator::GetRectVertices);
+    }
+    else{
+        //配准
+        connect(this, qOverload<const std::string&, const std::string&, const std::string&, const char, const char, const int>(&MainWindow::operate),
+                worker, &Registrator::Registrating);
+    }
 	//线程结束后发送信号，对结果进行处理
 	connect(worker, &Registrator::HandleResults, this, &MainWindow::HandleResults);
 	//按钮变灰和激活
 	ui->pushButtonRun->setEnabled(false);
 	ui->pushButtonPause->setEnabled(true);
+    ui->pushButtonSrc->setEnabled(true);
+    ui->pushButtonBin->setEnabled(true);
+    ui->pushButtonDst->setEnabled(true);
 	ui->checkBoxFailedList->setEnabled(false);
 	ui->checkBoxSemiAuto->setEnabled(false);
+    ui->checkBoxGetRect->setEnabled(false);
 	ui->lineEditSrc->setEnabled(false);
 	ui->lineEditBin->setEnabled(false);
 	ui->lineEditDst->setEnabled(false);
 	//启动线程
 	workerThread.start();
 	//发射进程运行信号
-	emit operate(filePattern, binImg, dstImg, this->getSemi(), this->getFailed());
+    //若勾选分割轮廓，则分割轮廓，否则配准
+    if(ui->checkBoxGetRect->isChecked()){
+        //分割
+        emit operate(filePattern, binImg);
+    }
+    else{
+        //配准
+        emit operate(filePattern, binImg, dstImg, this->getSemi(), this->getFailed());
+    }
+
 }
 
 void MainWindow::on_pushButtonPause_clicked()
@@ -106,7 +149,16 @@ void MainWindow::on_pushButtonResume_clicked()
 	//重新启动线程
 	workerThread.start();
 	//发射进程运行信号,从上次终止的点开始,最后一个参数就是上次运行到的断点
-	emit operate(filePattern, binImg, dstImg, this->getSemi(), this->getFailed(), std::stoi(string(tmp, 0, i)));
+    //若勾选分割轮廓，则分割轮廓，否则配准
+    if(ui->checkBoxGetRect->isChecked()){
+        //分割
+        emit operate(filePattern, binImg, std::stoi(string(tmp, 0, i)));
+    }
+    else{
+        //配准
+        emit operate(filePattern, binImg, dstImg, this->getSemi(), this->getFailed(), std::stoi(string(tmp, 0, i)));
+    }
+
 	ui->pushButtonPause->setEnabled(true);
 }
 
@@ -148,5 +200,8 @@ void MainWindow::SendProcess(const QString processingName, const int processingN
 	ui->labelProcessingName->setText(processingName);
 	if (processingNum == allNum) HandleResults();
 }
+
+
+
 
 

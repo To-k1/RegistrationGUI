@@ -179,6 +179,7 @@ bool Registration::Has4Points(Point2f pts[], const int ptsSize, const int th_x, 
 
 int Registration::RemoveSmall(Mat& src, Mat& dst) {
 
+	//将二值图转化为黑白存储到dst中
 	inRange(src, Scalar(0, 100, 0), Scalar(255, 255, 255), dst);
 	MkdirAndImwrite("original.png", dst);
 
@@ -266,8 +267,14 @@ void Registration::IntoPoly(Mat& dstImage, vector<vector<Point>>& pts)
 	fillPoly(dstImage, pts, Scalar(255, 255, 255));
 	MkdirAndImwrite("srcPloy.png", dstImage);
 
-
 }
+
+void Registration::IntoPoly(Mat& dstImage, vector<Point>& pts)
+{
+	vector<vector<Point>> ptss(1); ptss[0] = pts;
+	IntoPoly(dstImage, ptss);
+}
+
 
 
 
@@ -484,7 +491,8 @@ bool Registration::Registrating1PicSemi(Mat& M, const String FnSrc, const String
 }
 
 
-//处理文件路径
+
+
 void Registration::GetFilePath(vector<String>& srcNames, const string& srcPattern, const char useFailedImg) {
 	if (useFailedImg == 'y') {
 		ifstream failedImg("failedImg.txt");
@@ -498,6 +506,80 @@ void Registration::GetFilePath(vector<String>& srcNames, const string& srcPatter
 		glob(srcPattern, srcNames, true);
 	}
 }
+
+///
+/// 以下为传统图像处理边缘分割
+/// 
+
+
+bool Registration::GetRectVertices1Pic(const String FnSrc, const String fnBinImg, Point2f pts2F[4]) {
+	Mat srcImg = imread(FnSrc);
+	Mat binImg(srcImg.size(), CV_8UC1), edge, blurImg;
+	//转换为灰度图
+	cvtColor(srcImg, srcImg, COLOR_BGR2GRAY);
+	//滤波
+	medianBlur(srcImg, blurImg, 21);
+	//blur(srcImg, blurImg, Size(3, 3));
+	MkdirAndImwrite(fnBinImg + "Blur.png", blurImg);
+    ////二值化
+    //threshold(blurImg, blurImg, 100, 255, THRESH_BINARY);
+    //MkdirAndImwrite(fnBinImg + "BinBlur.png", blurImg);
+	//边缘检测
+	Canny(blurImg, edge, 5, 12, 3);
+	//保存Canny边缘图像
+	MkdirAndImwrite(fnBinImg + "CannyEdge.png", edge);
+	binImg = Scalar::all(0);
+	//提取轮廓
+	vector<vector<Point>> contours;
+	vector<Vec4i> hierarchy;
+	//找到并存储轮廓
+    findContours(edge, contours, hierarchy, RETR_TREE, CHAIN_APPROX_TC89_KCOS);
+	//画出所有轮廓
+	for (int index = 0; index < contours.size(); index++) {
+		drawContours(edge, contours, index, Scalar(255, 255, 255), 1, 8/*, hierarchy*/);
+	}
+	//保存画出的边缘图像
+	MkdirAndImwrite(fnBinImg + "Contours.png", edge);
+	//提取面积最大的轮廓，下标为maxArea，polyContours存储外接多边形轮廓
+	edge = Scalar::all(0);
+	vector<vector<Point>> polyContours(contours.size());
+	int maxArea = 0;
+	for (int index = 0; index < contours.size(); index++) {
+		if (contourArea(contours[index]) > contourArea(contours[maxArea]))
+			maxArea = index;
+		//最小外接多边形
+		approxPolyDP(contours[index], polyContours[index], 30, true);
+		//画出所有多边形轮廓
+		drawContours(edge, polyContours, index, Scalar(255, 255, 255), 1, 8);
+	}
+	//保存画出的多边形边缘图像
+	MkdirAndImwrite(fnBinImg + "PolyContours.png", edge);
+
+	//画出矩形
+	Mat polyPic = Mat::zeros(srcImg.size(), CV_8UC3);
+    //drawContours(polyPic, contours, maxArea, Scalar(0, 0, 255/*rand() & 255, rand() & 255, rand() & 255*/), 2);
+    drawContours(polyPic, polyContours, maxArea, Scalar(0, 0, 255/*rand() & 255, rand() & 255, rand() & 255*/), 2);
+	//保存画出的矩形图像
+	MkdirAndImwrite(fnBinImg + "Rect.png", polyPic);
+	//寻找凸包，hull储存凸包点
+	vector<Point> hull;
+	convexHull(polyContours[maxArea], hull, true);  //检测该轮廓的凸包,顺时针排列
+
+	//填充矩形
+	IntoPoly(binImg, hull);
+	MkdirAndImwrite(fnBinImg, binImg);
+	//检测是否有4个点
+	if (!Has4Points(hull, srcImg.cols / 4, srcImg.rows / 4) || pts2F == nullptr) return false;
+
+	//删除多余顶点(仅仅将不多余的放入2f)
+	for (int i = 1, j = 1; i < hull.size(); ++i) {
+		//不为多余顶点
+		if (abs(hull[i - 1].x - hull[i].x) > (srcImg.cols / 4) || abs(hull[i - 1].y - hull[i].y) > (srcImg.rows / 4))
+			pts2F[j++] = hull[i];
+	}
+
+}
+
 
 
 

@@ -101,9 +101,9 @@ void MainWindow::on_pushButtonRun_clicked()
 	//按钮变灰和激活
 	ui->pushButtonRun->setEnabled(false);
 	ui->pushButtonPause->setEnabled(true);
-    ui->pushButtonSrc->setEnabled(true);
-    ui->pushButtonBin->setEnabled(true);
-    ui->pushButtonDst->setEnabled(true);
+    ui->pushButtonSrc->setEnabled(false);
+    ui->pushButtonBin->setEnabled(false);
+    ui->pushButtonDst->setEnabled(false);
 	ui->checkBoxFailedList->setEnabled(false);
 	ui->checkBoxSemiAuto->setEnabled(false);
     ui->checkBoxGetRect->setEnabled(false);

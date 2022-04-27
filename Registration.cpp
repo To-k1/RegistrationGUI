@@ -20,40 +20,6 @@ void Registration::MkdirAndImwrite(const String& filename, const InputArray& img
 //以下为点的顺时针排序过程
 //以下为点的顺时针排序过程
 
-//对y方向上的点位进行排序
-
-
-bool Registration::SetSortRuleX(const Point p1, const Point p2)
-{
-	if (p1.x < p2.x)
-		return true;
-	else
-		return false;
-}
-//对x方向上的点位进行排序
-
-bool Registration::SetSortRuleY(const Point p1, const Point p2)
-{
-	if (p1.y < p2.y)
-		return true;
-	else
-		return false;
-}
-//用于从上到下从左到右排序
-
-int Registration::PointSortL2R(vector<Point>& pts)
-{
-	std::cout << pts << "before:" << std::endl;
-	//先按y，再按x排序
-	sort(pts.begin(), pts.end(), SetSortRuleY);
-	sort(pts.begin(), pts.end(), SetSortRuleX);
-	std::cout << pts << "aft:" << std::endl;
-
-
-
-	return 0;
-}
-
 
 //计算该点与中心连线的斜率角
 
@@ -521,9 +487,9 @@ bool Registration::GetRectVertices1Pic(const String FnSrc, const String fnBinImg
 	medianBlur(srcImg, blurImg, 21);
 	//blur(srcImg, blurImg, Size(3, 3));
 	MkdirAndImwrite(fnBinImg + "Blur.png", blurImg);
-    ////二值化
-    //threshold(blurImg, blurImg, 100, 255, THRESH_BINARY);
-    //MkdirAndImwrite(fnBinImg + "BinBlur.png", blurImg);
+	////二值化
+	//threshold(blurImg, blurImg, 100, 255, THRESH_BINARY);
+	//MkdirAndImwrite(fnBinImg + "BinBlur.png", blurImg);
 	//边缘检测
 	Canny(blurImg, edge, 5, 12, 3);
 	//保存Canny边缘图像
@@ -533,7 +499,7 @@ bool Registration::GetRectVertices1Pic(const String FnSrc, const String fnBinImg
 	vector<vector<Point>> contours;
 	vector<Vec4i> hierarchy;
 	//找到并存储轮廓
-    findContours(edge, contours, hierarchy, RETR_TREE, CHAIN_APPROX_TC89_KCOS);
+	findContours(edge, contours, hierarchy, RETR_TREE, CHAIN_APPROX_TC89_KCOS);
 	//画出所有轮廓
 	for (int index = 0; index < contours.size(); index++) {
 		drawContours(edge, contours, index, Scalar(255, 255, 255), 1, 8/*, hierarchy*/);
@@ -557,8 +523,8 @@ bool Registration::GetRectVertices1Pic(const String FnSrc, const String fnBinImg
 
 	//画出矩形
 	Mat polyPic = Mat::zeros(srcImg.size(), CV_8UC3);
-    //drawContours(polyPic, contours, maxArea, Scalar(0, 0, 255/*rand() & 255, rand() & 255, rand() & 255*/), 2);
-    drawContours(polyPic, polyContours, maxArea, Scalar(0, 0, 255/*rand() & 255, rand() & 255, rand() & 255*/), 2);
+	//drawContours(polyPic, contours, maxArea, Scalar(0, 0, 255/*rand() & 255, rand() & 255, rand() & 255*/), 2);
+	drawContours(polyPic, polyContours, maxArea, Scalar(0, 0, 255/*rand() & 255, rand() & 255, rand() & 255*/), 2);
 	//保存画出的矩形图像
 	MkdirAndImwrite(fnBinImg + "Rect.png", polyPic);
 	//寻找凸包，hull储存凸包点

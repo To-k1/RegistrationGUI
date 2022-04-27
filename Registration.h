@@ -35,12 +35,6 @@ namespace Registration
 	/// <param name="img"></param>
 	void MkdirAndImwrite(const String& filename, const InputArray& img);
 
-	//PointSort
-	bool SetSortRuleX(const Point p1, const Point p2);
-	//对x方向上的点位进行排序
-	bool SetSortRuleY(const Point p1, const Point p2);
-	//用于从上到下从左到右排序
-	int PointSortL2R(vector<Point>& pts);
 
 	//对点进行顺时针排序，保证能正确绘制矩形
 	void ClockwiseSortPoints(vector<Point>& pts);

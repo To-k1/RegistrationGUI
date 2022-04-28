@@ -254,20 +254,21 @@ void Registration::IntoPoly(Mat& dstImage, vector<Point>& pts)
 
 //从前到后分别为变换矩阵，原图，二值图，结果图，中间图1,2，参照图，flagM表示是否直接用传进来的变换矩阵为1用,succeed表示是否失败过，为1表示失败过要变更参数
 
-bool Registration::Registrating1Pic(Mat& M, const String FnSrc, const String fnBinImg, const String FnFi, const bool flagM, const bool failed, const String FnMid1, const String FnMid2, const String fnRefImg)
+bool Registration::Registrating1Pic(Mat& M, const String fnSrc, const String fnBinImg, const String fnFi, const bool flagM, const bool failed, const String FnMid1, const String FnMid2, const String fnRefImg)
 {
     //用于记录失败的图片
     ofstream failedImg; failedImg.open("failedImg.txt", ofstream::app);
     //IMG1:二值图，refimg：参考二值图，src：原图，dst：结果图
-    Mat binImg = imread(fnBinImg), refImg = imread(fnRefImg), src = imread(FnSrc), dst(src.size(), CV_8UC3);
+    Mat binImg = imread(fnBinImg), refImg = imread(fnRefImg), src = imread(fnSrc), dst(src.size(), CV_8UC3);
     //没有二值图(png)返回
     if (binImg.empty()) {
-        return 1;
+        return true;
     }
     resize(refImg, refImg, Size(src.cols, src.rows));
     Mat midImg(src.size(), CV_8UC1);
     //vector<vector<Point>> pts(1), rectPts(1);//存放交点
     Point2f pts2F[4], rectPts2F[4];
+    //若有矩阵且使用则直接变换
     if (flagM && !M.empty()) warpPerspective(src, dst, M, Size(src.cols, src.rows));
     else {
 
@@ -285,11 +286,11 @@ bool Registration::Registrating1Pic(Mat& M, const String FnSrc, const String fnB
         catch (...) {
             //若已经失败过，记录文件名到txt文件方便以后处理
             if (failed)
-                failedImg << string(FnSrc.c_str()) << std::endl;
+                failedImg << string(fnSrc.c_str()) << std::endl;
             std::cout << "该图失败" << std::endl;
             failedImg.close();
             //删除失败的结果图，方便下一步处理
-            remove(FnFi.c_str());
+            remove(fnFi.c_str());
             return false;
         }
 
@@ -307,10 +308,9 @@ bool Registration::Registrating1Pic(Mat& M, const String FnSrc, const String fnB
             CntPoint(binImg, midImg, pts, 7, CV_PI / 180, src.cols * 700 / 4096);
         std::cout << pts[0] << std::endl;
         MkdirAndImwrite(FnMid1, midImg);//中间图1
-        if (pts[0].size() < 4 || pts[0].size() > 100) {
+        if (!Has4Points(pts[0], src.cols / 4, src.rows / 4) || pts[0].size() > 100) {
             std::cout << "识别不到4个顶点" << std::endl;
-            Mat temp = midImg;
-            MkdirAndImwrite(FnFi, temp);
+            MkdirAndImwrite(fnFi, midImg);
             return false;
         }
 
@@ -336,11 +336,11 @@ bool Registration::Registrating1Pic(Mat& M, const String FnSrc, const String fnB
             if ((pts2F[i] == Point2f(0, 0)) || ((i > 0) && (abs(pts2F[i - 1].x - pts2F[i].x) < (src.cols / 4) && abs(pts2F[i - 1].y - pts2F[i].y) < (src.rows / 4)))) {
                 //若已经失败过，记录文件名到txt文件方便以后处理
                 if (failed)
-                    failedImg << string(FnSrc.c_str()) << std::endl;
+                    failedImg << string(fnSrc.c_str()) << std::endl;
                 std::cout << "该图失败" << std::endl;
                 failedImg.close();
                 //删除失败的结果图，方便下一步处理
-                remove(FnFi.c_str());
+                remove(fnFi.c_str());
                 return false;
             }
         }
@@ -354,7 +354,7 @@ bool Registration::Registrating1Pic(Mat& M, const String FnSrc, const String fnB
     dst.copyTo(maskedDst, refImg);//抠图
     //测试用，如果失败过在图片上标记
     //if (failed) putText(maskedDst, "2222", Point(1600, 900), FONT_HERSHEY_TRIPLEX, 10, Scalar(0, 0, 255));
-    MkdirAndImwrite(FnFi, maskedDst);//最终结果
+    MkdirAndImwrite(fnFi, maskedDst);//最终结果
     failedImg.close();
 
 

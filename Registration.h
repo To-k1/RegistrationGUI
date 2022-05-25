@@ -78,6 +78,7 @@ namespace Registration
     /// <param name="srn">霍夫变换参数，像素精度除数</param>
     /// <param name="stn">霍夫变换参数，角精度除数</param>
     void CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>& pts, const double rho_h = 1, const double theta_h = CV_PI / 360, const double th_h = 450, const double srn = 0, const double stn = 0);
+    void CntPoint(Mat& srcImage, Mat& dstImage, const double rho_h = 1, const double theta_h = CV_PI / 360, const double th_h = 450, const double srn = 0, const double stn = 0);
     void IntoPoly(Mat& dstImage, vector<vector<Point>>& pts);
     void IntoPoly(Mat& dstImage, vector<Point>& pts);
 

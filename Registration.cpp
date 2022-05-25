@@ -210,7 +210,7 @@ void Registration::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>&
         pt2.x = cvRound(x0 - 10000 * (-b));
         pt2.y = cvRound(y0 - 10000 * (a));
         //画线
-        line(dstImage, pt1, pt2, Scalar(0, 255, 255), 3, LINE_AA);
+        line(dstImage, pt1, pt2, Scalar(255, 255, 255), 3, LINE_AA);
         //两两求交点
         for (size_t j = i + 1; j < lines.size(); ++j)
         {
@@ -223,6 +223,45 @@ void Registration::CntPoint(Mat& srcImage, Mat& dstImage, vector<vector<Point>>&
     }
 
 }
+
+//只需要画线，不返回点集的重载
+void Registration::CntPoint(Mat& srcImage, Mat& dstImage, const double rho_h, const double theta_h, const double th_h, const double srn, const double stn)
+{
+    //【1】载入原始图和Mat变量定义   
+    //Mat srcImage = imread("remove.png");  //工程目录下应该有一张名为remove.png的素材图
+    Mat midImage;//临时变量和目标图的定义
+    //vector<vector<Point>> pts(1);//存放交点
+
+    pts[0].clear();
+
+    //【2】进行边缘检测和转化为灰度图
+    Canny(srcImage, midImage, 50, 200, 3);//进行一此canny边缘检测
+    cvtColor(midImage, dstImage, COLOR_GRAY2BGR);//转化边缘检测后的图为灰度图
+    dstImage = Scalar::all(0);
+    //存储Canny边缘检测结果的中间图
+    MkdirAndImwrite("cannyEdge.png", midImage);
+
+    //【3】进行霍夫线变换
+    vector<Vec2f> lines;//定义一个矢量结构lines用于存放得到的线段矢量集合
+    HoughLines(midImage, lines, rho_h, theta_h, th_h, srn, stn);
+
+    //【4】依次在图中绘制出每条线段,并且两两求交点
+    for (size_t i = 0; i < lines.size(); i++)
+    {
+        float rho = lines[i][0], theta = lines[i][1];
+        Point pt1, pt2;
+        double a = cos(theta), b = sin(theta);
+        double x0 = a * rho, y0 = b * rho;
+        pt1.x = cvRound(x0 + 10000 * (-b));
+        pt1.y = cvRound(y0 + 10000 * (a));
+        pt2.x = cvRound(x0 - 10000 * (-b));
+        pt2.y = cvRound(y0 - 10000 * (a));
+        //画线
+        line(dstImage, pt1, pt2, Scalar(255, 255, 255), 3, LINE_AA);
+    }
+
+}
+
 
 
 void Registration::IntoPoly(Mat& dstImage, vector<vector<Point>>& pts)
@@ -484,14 +523,22 @@ bool Registration::GetRectVertices1Pic(const String FnSrc, const String fnBinImg
     //转换为灰度图
     cvtColor(srcImg, srcImg, COLOR_BGR2GRAY);
     //滤波
-    medianBlur(srcImg, blurImg, 21);
+    //medianBlur(srcImg, blurImg, 21);
+    medianBlur(srcImg, blurImg, 3);
     //blur(srcImg, blurImg, Size(3, 3));
     MkdirAndImwrite(fnBinImg + "Blur.png", blurImg);
     ////二值化
     //threshold(blurImg, blurImg, 100, 255, THRESH_BINARY);
     //MkdirAndImwrite(fnBinImg + "BinBlur.png", blurImg);
+    //阈值化
+    adaptiveThreshold(blurImg, blurImg, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, 7, 5);
+    MkdirAndImwrite(fnBinImg + "Th.png", blurImg);
+    //识别并绘制直线
+    CntPoint(blurImg, edge, 1, CV_PI / 360, blurImg.cols * 450 / 4096);
+    MkdirAndImwrite(fnBinImg + "Lines.png", edge);
     //边缘检测
-    Canny(blurImg, edge, 5, 12, 3);
+    Canny(edge, blurImg, 5, 12, 3);
+    edge = blurImg;
     //保存Canny边缘图像
     MkdirAndImwrite(fnBinImg + "CannyEdge.png", edge);
     binImg = Scalar::all(0);
@@ -546,6 +593,76 @@ bool Registration::GetRectVertices1Pic(const String FnSrc, const String fnBinImg
 
 }
 
+//bool Registration::GetRectVertices1Pic(const String FnSrc, const String fnBinImg, Point2f pts2F[4]) {
+//    Mat srcImg = imread(FnSrc);
+//    Mat binImg(srcImg.size(), CV_8UC1), edge, blurImg;
+//    //转换为灰度图
+//    cvtColor(srcImg, srcImg, COLOR_BGR2GRAY);
+//    //滤波
+//    //medianBlur(srcImg, blurImg, 21);
+//    medianBlur(srcImg, blurImg, 3);
+//    //blur(srcImg, blurImg, Size(3, 3));
+//    //阈值化
+//    adaptiveThreshold(blurImg, blurImg, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, 7, -5);
+//    MkdirAndImwrite(fnBinImg + "Blur.png", blurImg);
+//    ////二值化
+//    //threshold(blurImg, blurImg, 100, 255, THRESH_BINARY);
+//    //MkdirAndImwrite(fnBinImg + "BinBlur.png", blurImg);
+//    //边缘检测
+//    Canny(blurImg, edge, 5, 12, 3);
+//    //保存Canny边缘图像
+//    MkdirAndImwrite(fnBinImg + "CannyEdge.png", edge);
+//    binImg = Scalar::all(0);
+//    //提取轮廓
+//    vector<vector<Point>> contours;
+//    vector<Vec4i> hierarchy;
+//    //找到并存储轮廓
+//    findContours(edge, contours, hierarchy, RETR_TREE, CHAIN_APPROX_TC89_KCOS);
+//    //画出所有轮廓
+//    for (int index = 0; index < contours.size(); index++) {
+//        drawContours(edge, contours, index, Scalar(255, 255, 255), 1, 8/*, hierarchy*/);
+//    }
+//    //保存画出的边缘图像
+//    MkdirAndImwrite(fnBinImg + "Contours.png", edge);
+//    //提取面积最大的轮廓，下标为maxArea，polyContours存储外接多边形轮廓
+//    edge = Scalar::all(0);
+//    vector<vector<Point>> polyContours(contours.size());
+//    int maxArea = 0;
+//    for (int index = 0; index < contours.size(); index++) {
+//        if (contourArea(contours[index]) > contourArea(contours[maxArea]))
+//            maxArea = index;
+//        //最小外接多边形
+//        approxPolyDP(contours[index], polyContours[index], 30, true);
+//        //画出所有多边形轮廓
+//        drawContours(edge, polyContours, index, Scalar(255, 255, 255), 1, 8);
+//    }
+//    //保存画出的多边形边缘图像
+//    MkdirAndImwrite(fnBinImg + "PolyContours.png", edge);
+//
+//    //画出矩形
+//    Mat polyPic = Mat::zeros(srcImg.size(), CV_8UC3);
+//    //drawContours(polyPic, contours, maxArea, Scalar(0, 0, 255/*rand() & 255, rand() & 255, rand() & 255*/), 2);
+//    drawContours(polyPic, polyContours, maxArea, Scalar(0, 0, 255/*rand() & 255, rand() & 255, rand() & 255*/), 2);
+//    //保存画出的矩形图像
+//    MkdirAndImwrite(fnBinImg + "Rect.png", polyPic);
+//    //寻找凸包，hull储存凸包点
+//    vector<Point> hull;
+//    convexHull(polyContours[maxArea], hull, true);  //检测该轮廓的凸包,顺时针排列
+//
+//    //填充矩形
+//    IntoPoly(binImg, hull);
+//    MkdirAndImwrite(fnBinImg, binImg);
+//    //检测是否有4个点
+//    if (!Has4Points(hull, srcImg.cols / 4, srcImg.rows / 4) || pts2F == nullptr) return false;
+//
+//    //删除多余顶点(仅仅将不多余的放入2f)
+//    for (int i = 1, j = 1; i < hull.size(); ++i) {
+//        //不为多余顶点
+//        if (abs(hull[i - 1].x - hull[i].x) > (srcImg.cols / 4) || abs(hull[i - 1].y - hull[i].y) > (srcImg.rows / 4))
+//            pts2F[j++] = hull[i];
+//    }
+//
+//}
 
 
 
